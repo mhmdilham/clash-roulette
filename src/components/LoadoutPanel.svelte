@@ -549,7 +549,7 @@
                       <div class="mt-1 flex items-center gap-1">
                         <span
                           title="Semua role: {item.roles.join(', ')}"
-                          class="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                          class="inline-flex w-24 items-center justify-center whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
                         >
                           {primaryRole}
                         </span>
@@ -607,7 +607,7 @@
               <h3 class="mb-2.5 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">
                 Super Troops ({spinStore.loadout.superTroops.length}/{spinStore.filters.realisticLimits ? thConfig.maxSuperTroops : '∞'})
               </h3>
-              <div class="grid grid-cols-1 gap-2">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.superTroops as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId) as SuperTroopItem | undefined}
                   {#if item}
@@ -623,10 +623,10 @@
                           <div class="truncate text-xs font-bold text-white" title={item.name}>
                             {item.name}
                           </div>
-                          <div class="mt-0.5">
+                          <div class="mt-1">
                             <span
                               title="Semua role: {item.roles.join(', ')}"
-                              class="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                              class="inline-flex w-24 items-center justify-center whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
                             >
                               {primaryRole}
                             </span>
@@ -681,7 +681,7 @@
               <h3 class="mb-2.5 text-xs font-bold tracking-wider text-sky-300 uppercase">
                 Spells ({spinStore.loadout.spells.length})
               </h3>
-              <div class="grid grid-cols-1 gap-2">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.spells as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId)}
                   {#if item}
@@ -744,7 +744,7 @@
               <h3 class="mb-2.5 text-xs font-bold tracking-wider text-rose-300 uppercase">
                 Siege Machine ({spinStore.loadout.siegeMachines.length}/{spinStore.filters.realisticLimits ? thConfig.maxSiege : '∞'})
               </h3>
-              <div class="grid grid-cols-1 gap-2">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.siegeMachines as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId)}
                   {#if item}
