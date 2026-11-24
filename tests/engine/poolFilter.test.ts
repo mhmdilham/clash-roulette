@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { computeEligiblePool, getEffectiveRelevance } from '../../src/engine/poolFilter';
+import {
+  computeEligiblePool,
+  getEffectiveRelevance,
+  getPrimaryDisplayRole,
+} from '../../src/engine/poolFilter';
 import type { FilterState, LoadoutState } from '../../src/data/types';
 
 function emptyLoadout(): LoadoutState {
@@ -348,5 +352,21 @@ describe('computeEligiblePool — Realistic TH limits & Replacement scoping', ()
     });
     expect(res.emptyReason).toBeNull();
     expect(res.items.map((h) => h.id)).toEqual(['minion-prince', 'dragon-duke']);
+  });
+});
+
+describe('getPrimaryDisplayRole', () => {
+  it('returns the unit primary role (first role) when no filter roles are active', () => {
+    expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], [])).toBe('Main');
+    expect(getPrimaryDisplayRole(['Damage Dealer', 'Funnel', 'Clean-up'], [])).toBe('Damage Dealer');
+  });
+
+  it('prefers the closest matching active filter role when present', () => {
+    expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], ['Tank'])).toBe('Tank');
+    expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], ['Support', 'Funnel'])).toBe('Support');
+  });
+
+  it('falls back to primary role if active filter does not match unit roles', () => {
+    expect(getPrimaryDisplayRole(['Support', 'Tank'], ['Clean-up'])).toBe('Support');
   });
 });

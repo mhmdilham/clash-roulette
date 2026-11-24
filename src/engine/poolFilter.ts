@@ -13,7 +13,19 @@ import type {
   SpinItem,
   SuperTroopItem,
   TroopItem,
+  TroopRole,
 } from '../data/types';
+
+export function getPrimaryDisplayRole(
+  roles: readonly TroopRole[],
+  activeFilterRoles: readonly TroopRole[] = [],
+): TroopRole {
+  if (activeFilterRoles.length > 0) {
+    const matched = roles.find((r) => activeFilterRoles.includes(r));
+    if (matched) return matched;
+  }
+  return roles[0] ?? 'Main';
+}
 
 export type EmptyPoolReason =
   | 'slot-full'

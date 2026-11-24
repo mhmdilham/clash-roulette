@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getHeroById, getItemById } from '../data';
-  import type { LoadoutState } from '../data/types';
+  import type { LoadoutState, SuperTroopItem, TroopItem } from '../data/types';
+  import { getPrimaryDisplayRole } from '../engine/poolFilter';
   import UnitIcon from './UnitIcon.svelte';
 
   interface Props {
@@ -16,7 +17,7 @@
 <div class="pointer-events-none fixed top-0 -left-[9999px] z-[-1]" aria-hidden="true">
   <div
     bind:this={cardRef}
-    class="w-[680px] rounded-2xl border-2 border-amber-400/70 bg-gradient-to-br from-[#0e101c] via-[#121324] to-[#0a0b12] p-6 text-slate-100"
+    class="w-[720px] rounded-2xl border-2 border-amber-400/70 bg-gradient-to-br from-[#0e101c] via-[#121324] to-[#0a0b12] p-6 text-slate-100"
   >
     <div class="mb-5 flex items-center justify-between border-b border-slate-800 pb-4">
       <div>
@@ -33,7 +34,7 @@
     </div>
 
     {#if loadout.heroes.length > 0}
-      <div class="mb-4">
+      <div class="mb-5">
         <div class="mb-2 text-xs font-bold tracking-wider text-amber-300 uppercase">
           Heroes, Equipment & Pets
         </div>
@@ -42,26 +43,30 @@
             {@const hero = getHeroById(slot.heroId)}
             {#if hero}
               <div class="rounded-xl border border-slate-800 bg-slate-900/90 p-3">
-                <div class="mb-2 flex items-center gap-2.5">
+                <div class="mb-2.5 flex items-center gap-2.5">
                   <UnitIcon item={hero} size={40} class="border-amber-400/60" />
                   <div class="font-bold text-white">{hero.name}</div>
                 </div>
-                <div class="flex flex-wrap items-center gap-1.5">
-                  {#each slot.equipment as eq (eq.uid)}
-                    {@const eqItem = getItemById(eq.itemId)}
-                    {#if eqItem}
-                      <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-2 py-1 text-xs text-slate-200 ring-1 ring-slate-800">
-                        <UnitIcon item={eqItem} size={22} />
-                        <span>{eqItem.name}</span>
-                      </div>
-                    {/if}
-                  {/each}
+                <div class="space-y-1.5">
+                  {#if slot.equipment.length > 0}
+                    <div class="grid grid-cols-2 gap-1.5">
+                      {#each slot.equipment as eq (eq.uid)}
+                        {@const eqItem = getItemById(eq.itemId)}
+                        {#if eqItem}
+                          <div class="flex min-w-0 items-center gap-1.5 rounded-lg bg-slate-950 px-2 py-1 text-xs text-slate-200 ring-1 ring-slate-800">
+                            <UnitIcon item={eqItem} size={20} />
+                            <span class="truncate">{eqItem.name}</span>
+                          </div>
+                        {/if}
+                      {/each}
+                    </div>
+                  {/if}
                   {#if slot.pet}
                     {@const petItem = getItemById(slot.pet.itemId)}
                     {#if petItem}
-                      <div class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-950/60 px-2 py-1 text-xs text-emerald-200 ring-1 ring-emerald-700/50">
-                        <UnitIcon item={petItem} size={22} />
-                        <span>{petItem.name}</span>
+                      <div class="flex items-center gap-1.5 rounded-lg bg-emerald-950/60 px-2 py-1 text-xs text-emerald-200 ring-1 ring-emerald-700/50">
+                        <UnitIcon item={petItem} size={20} />
+                        <span class="truncate font-semibold">{petItem.name}</span>
                       </div>
                     {/if}
                   {/if}
@@ -74,17 +79,17 @@
     {/if}
 
     {#if loadout.unpairedEquipment.length > 0}
-      <div class="mb-3">
+      <div class="mb-4">
         <div class="mb-1.5 text-xs font-bold tracking-wider text-purple-300 uppercase">
           Equipment (Belum Terpasang)
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="grid grid-cols-3 gap-2">
           {#each loadout.unpairedEquipment as eq (eq.uid)}
             {@const eqItem = getItemById(eq.itemId)}
             {#if eqItem}
-              <div class="inline-flex items-center gap-1.5 rounded-lg bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-100 ring-1 ring-purple-700/50">
+              <div class="flex min-w-0 items-center gap-1.5 rounded-lg bg-purple-950/40 px-2.5 py-1.5 text-xs font-semibold text-purple-100 ring-1 ring-purple-700/50">
                 <UnitIcon item={eqItem} size={22} />
-                <span>{eqItem.name}</span>
+                <span class="truncate">{eqItem.name}</span>
               </div>
             {/if}
           {/each}
@@ -93,17 +98,17 @@
     {/if}
 
     {#if loadout.unpairedPets.length > 0}
-      <div class="mb-3">
+      <div class="mb-4">
         <div class="mb-1.5 text-xs font-bold tracking-wider text-emerald-300 uppercase">
           Pets (Cadangan)
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="grid grid-cols-3 gap-2">
           {#each loadout.unpairedPets as pet (pet.uid)}
             {@const petItem = getItemById(pet.itemId)}
             {#if petItem}
-              <div class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-700/50">
+              <div class="flex min-w-0 items-center gap-1.5 rounded-lg bg-emerald-950/40 px-2.5 py-1.5 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-700/50">
                 <UnitIcon item={petItem} size={22} />
-                <span>{petItem.name}</span>
+                <span class="truncate">{petItem.name}</span>
               </div>
             {/if}
           {/each}
@@ -112,15 +117,18 @@
     {/if}
 
     {#if loadout.troops.length > 0}
-      <div class="mb-3">
-        <div class="mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">Troops</div>
-        <div class="flex flex-wrap gap-2">
+      <div class="mb-4">
+        <div class="mb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Troops</div>
+        <div class="grid grid-cols-3 gap-2">
           {#each loadout.troops as entry (entry.uid)}
-            {@const item = getItemById(entry.itemId)}
+            {@const item = getItemById(entry.itemId) as TroopItem | undefined}
             {#if item}
-              <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-100 ring-1 ring-slate-700">
-                <UnitIcon {item} size={24} />
-                <span>{item.name}</span>
+              <div class="flex min-w-0 items-center gap-2 rounded-lg bg-slate-900 px-2.5 py-1.5 ring-1 ring-slate-700/80">
+                <UnitIcon {item} size={26} />
+                <div class="min-w-0 leading-tight">
+                  <div class="truncate text-xs font-bold text-slate-100">{item.name}</div>
+                  <div class="text-[10px] text-amber-300/90">{getPrimaryDisplayRole(item.roles)}</div>
+                </div>
               </div>
             {/if}
           {/each}
@@ -128,57 +136,59 @@
       </div>
     {/if}
 
-    {#if loadout.superTroops.length > 0}
-      <div class="mb-3">
-        <div class="mb-1.5 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">Super Troops</div>
-        <div class="flex flex-wrap gap-2">
-          {#each loadout.superTroops as entry (entry.uid)}
-            {@const item = getItemById(entry.itemId)}
-            {#if item}
-              <div class="inline-flex items-center gap-1.5 rounded-lg bg-fuchsia-950/40 px-2.5 py-1 text-xs font-semibold text-fuchsia-100 ring-1 ring-fuchsia-700/50">
-                <UnitIcon {item} size={24} />
-                <span>{item.name}</span>
-              </div>
-            {/if}
-          {/each}
-        </div>
+    {#if loadout.superTroops.length > 0 || loadout.spells.length > 0 || loadout.siegeMachines.length > 0}
+      <div class="grid grid-cols-3 gap-3">
+        {#if loadout.superTroops.length > 0}
+          <div>
+            <div class="mb-1.5 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">Super Troops</div>
+            <div class="grid grid-cols-1 gap-1.5">
+              {#each loadout.superTroops as entry (entry.uid)}
+                {@const item = getItemById(entry.itemId) as SuperTroopItem | undefined}
+                {#if item}
+                  <div class="flex min-w-0 items-center gap-2 rounded-lg bg-fuchsia-950/40 px-2.5 py-1.5 text-xs font-semibold text-fuchsia-100 ring-1 ring-fuchsia-700/50">
+                    <UnitIcon {item} size={22} />
+                    <span class="truncate">{item.name}</span>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if loadout.spells.length > 0}
+          <div>
+            <div class="mb-1.5 text-xs font-bold tracking-wider text-sky-300 uppercase">Spells</div>
+            <div class="grid grid-cols-1 gap-1.5">
+              {#each loadout.spells as entry (entry.uid)}
+                {@const item = getItemById(entry.itemId)}
+                {#if item}
+                  <div class="flex min-w-0 items-center gap-2 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 ring-1 ring-slate-700">
+                    <UnitIcon {item} size={22} />
+                    <span class="truncate">{item.name}</span>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          </div>
+        {/if}
+
+        {#if loadout.siegeMachines.length > 0}
+          <div>
+            <div class="mb-1.5 text-xs font-bold tracking-wider text-rose-300 uppercase">Siege Machine</div>
+            <div class="grid grid-cols-1 gap-1.5">
+              {#each loadout.siegeMachines as entry (entry.uid)}
+                {@const item = getItemById(entry.itemId)}
+                {#if item}
+                  <div class="flex min-w-0 items-center gap-2 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-slate-100 ring-1 ring-slate-700">
+                    <UnitIcon {item} size={22} />
+                    <span class="truncate">{item.name}</span>
+                  </div>
+                {/if}
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
     {/if}
-
-    <div class="grid grid-cols-2 gap-3">
-      {#if loadout.spells.length > 0}
-        <div>
-          <div class="mb-1.5 text-xs font-bold tracking-wider text-sky-300 uppercase">Spells</div>
-          <div class="flex flex-wrap gap-1.5">
-            {#each loadout.spells as entry (entry.uid)}
-              {@const item = getItemById(entry.itemId)}
-              {#if item}
-                <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-2 py-1 text-xs font-semibold text-slate-100 ring-1 ring-slate-700">
-                  <UnitIcon {item} size={22} />
-                  <span>{item.name}</span>
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
-      {/if}
-
-      {#if loadout.siegeMachines.length > 0}
-        <div>
-          <div class="mb-1.5 text-xs font-bold tracking-wider text-rose-300 uppercase">Siege Machine</div>
-          <div class="flex flex-wrap gap-1.5">
-            {#each loadout.siegeMachines as entry (entry.uid)}
-              {@const item = getItemById(entry.itemId)}
-              {#if item}
-                <div class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-2 py-1 text-xs font-semibold text-slate-100 ring-1 ring-slate-700">
-                  <UnitIcon {item} size={22} />
-                  <span>{item.name}</span>
-                </div>
-              {/if}
-            {/each}
-          </div>
-        </div>
-      {/if}
-    </div>
   </div>
 </div>

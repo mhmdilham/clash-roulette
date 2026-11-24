@@ -11,8 +11,9 @@
     Eraser,
   } from 'lucide-svelte';
   import { getHeroById, getItemById, getTownHallConfig } from '../data';
-  import type { SlotTarget, TroopItem, SuperTroopItem } from '../data/types';
+  import type { SlotTarget, TroopItem, SuperTroopItem, TroopRole } from '../data/types';
   import { formatLoadoutText } from '../engine/exportFormatter';
+  import { getPrimaryDisplayRole } from '../engine/poolFilter';
   import { spinStore } from '../stores/spinStore.svelte';
   import { exportElementToPng } from '../utils/exportImage';
   import UnitIcon from './UnitIcon.svelte';
@@ -59,6 +60,23 @@
       : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800';
   }
 
+  function roleBadgeClasses(role: TroopRole): string {
+    switch (role) {
+      case 'Main':
+        return 'bg-amber-500/15 text-amber-300 ring-amber-400/25';
+      case 'Tank':
+        return 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25';
+      case 'Support':
+        return 'bg-sky-500/15 text-sky-300 ring-sky-400/25';
+      case 'Damage Dealer':
+        return 'bg-rose-500/15 text-rose-300 ring-rose-400/25';
+      case 'Funnel':
+        return 'bg-purple-500/15 text-purple-300 ring-purple-400/25';
+      case 'Clean-up':
+        return 'bg-slate-700/60 text-slate-300 ring-slate-600/40';
+    }
+  }
+
   function triggerRespin(target: SlotTarget): void {
     spinStore.startSlotRespin(target);
   }
@@ -68,7 +86,7 @@
   class="rounded-2xl border border-slate-800 bg-slate-900/85 p-4 shadow-xl backdrop-blur-sm sm:p-5"
 >
   <!-- Header & Action Bar -->
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3.5">
+  <div class="mb-5 flex flex-col justify-between gap-3 border-b border-slate-800 pb-4 sm:flex-row sm:items-center">
     <div>
       <div class="flex items-center gap-2">
         <h2 class="text-base font-extrabold text-white">Hasil Loadout</h2>
@@ -79,17 +97,17 @@
           {spinStore.totalPickedCount} terpilih
         </span>
       </div>
-      <p class="text-xs text-slate-400">
+      <p class="mt-0.5 text-xs text-slate-400">
         Klik <strong class="text-slate-200">↻</strong> untuk re-spin 1 slot, <strong class="text-slate-200">🔒</strong> untuk kunci saat Clear Unlocked.
       </p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
       <button
         type="button"
         disabled={isEmpty}
         onclick={handleCopyText}
-        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/90 px-3 py-1.5 text-xs font-semibold text-slate-100 transition-colors hover:border-amber-400/60 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-amber-400/60 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
         {#if copied}
           <Check class="h-3.5 w-3.5 text-emerald-400" />
@@ -104,7 +122,7 @@
         type="button"
         disabled={isEmpty || exporting}
         onclick={handleDownloadPng}
-        class="inline-flex items-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-600/20 px-3 py-1.5 text-xs font-semibold text-purple-100 transition-colors hover:bg-purple-600/35 disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-600/20 px-3 py-2 text-xs font-semibold text-purple-100 transition-colors hover:bg-purple-600/35 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
         <Download class="h-3.5 w-3.5" />
         {exporting ? 'Membuat PNG...' : 'Export PNG'}
@@ -114,7 +132,7 @@
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearUnlocked()}
-        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-950/70 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-950/70 px-2.5 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
         title="Hapus semua slot yang tidak dikunci"
       >
         <Eraser class="h-3.5 w-3.5" />
@@ -125,7 +143,7 @@
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearAll()}
-        class="inline-flex items-center gap-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 px-2.5 py-1.5 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 px-2.5 py-2 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
         <Trash2 class="h-3.5 w-3.5" />
         Clear All
@@ -141,7 +159,7 @@
       </p>
     </div>
   {:else}
-    <div class="space-y-5">
+    <div class="space-y-6">
       <!-- 1. Heroes, Equipment & Pets -->
       {#if spinStore.loadout.heroes.length > 0 || spinStore.loadout.unpairedEquipment.length > 0 || spinStore.loadout.unpairedPets.length > 0}
         <div>
@@ -149,7 +167,7 @@
             <h3 class="text-xs font-bold tracking-wider text-amber-300 uppercase">
               Heroes & Companions
             </h3>
-            <span class="text-xs text-slate-400">
+            <span class="text-xs font-medium text-slate-400">
               Heroes {spinStore.loadout.heroes.length}/{spinStore.filters.realisticLimits ? thConfig.maxActiveHeroes : '∞'}
               {#if thConfig.maxPets > 0}
                 • Pets {spinStore.loadout.heroes.filter((h) => h.pet).length + spinStore.loadout.unpairedPets.length}/{spinStore.filters.realisticLimits ? thConfig.maxPets : '∞'}
@@ -163,9 +181,9 @@
                 {@const hero = getHeroById(slot.heroId)}
                 {#if hero}
                   <div
-                    class="rounded-xl border p-3 transition-colors {slot.locked
+                    class="flex flex-col justify-between rounded-xl border p-3.5 transition-colors {slot.locked
                       ? 'border-amber-400/60 bg-amber-500/5'
-                      : 'border-slate-800 bg-slate-950/70'}"
+                      : 'border-slate-800 bg-slate-950/75'}"
                   >
                     <!-- Hero Header Row -->
                     <div class="flex items-center justify-between gap-2">
@@ -179,7 +197,7 @@
                         </div>
                       </div>
 
-                      <div class="flex shrink-0 items-center gap-1">
+                      <div class="flex shrink-0 items-center gap-0.5">
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
@@ -217,82 +235,90 @@
                       </div>
                     </div>
 
-                    <!-- Equipment Slots (2) + Pet Slot (1 if TH14+) -->
-                    <div class="mt-2.5 flex flex-wrap gap-1.5 border-t border-slate-800/80 pt-2.5">
-                      {#each slot.equipment as eq (eq.uid)}
-                        {@const eqItem = getItemById(eq.itemId)}
-                        {#if eqItem}
-                          <div
-                            class="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs {eq.locked
-                              ? 'border-amber-400/50 bg-amber-500/10 text-amber-100'
-                              : 'border-slate-800 bg-slate-900 text-slate-200'}"
-                          >
-                            <UnitIcon item={eqItem} size={22} />
-                            <span class="font-medium">{eqItem.name}</span>
-                            <button
-                              type="button"
-                              disabled={spinStore.isSpinning}
-                              onclick={() =>
-                                triggerRespin({
-                                  kind: 'pairedEquipment',
-                                  heroUid: slot.uid,
-                                  equipUid: eq.uid,
-                                })}
-                              class="rounded p-0.5 text-slate-400 hover:text-amber-300 disabled:opacity-40"
-                              title="Re-spin equipment ini"
-                              aria-label="Re-spin {eqItem.name}"
-                            >
-                              <RotateCw class="h-3 w-3" />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={spinStore.isSpinning}
-                              onclick={() =>
-                                spinStore.toggleLock({
-                                  kind: 'pairedEquipment',
-                                  heroUid: slot.uid,
-                                  equipUid: eq.uid,
-                                })}
-                              class="rounded p-0.5 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:text-slate-200'}"
-                              title={eq.locked ? 'Buka kunci' : 'Kunci equipment'}
-                              aria-label="Kunci {eqItem.name}"
-                            >
-                              {#if eq.locked}
-                                <Lock class="h-3 w-3" />
-                              {:else}
-                                <Unlock class="h-3 w-3" />
-                              {/if}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={spinStore.isSpinning}
-                              onclick={() =>
-                                spinStore.removeSlot({
-                                  kind: 'pairedEquipment',
-                                  heroUid: slot.uid,
-                                  equipUid: eq.uid,
-                                })}
-                              class="rounded p-0.5 text-slate-500 hover:text-rose-300"
-                              title="Hapus equipment"
-                              aria-label="Hapus {eqItem.name}"
-                            >
-                              <X class="h-3 w-3" />
-                            </button>
-                          </div>
-                        {/if}
-                      {/each}
+                    <!-- Aligned Sub-grid: 2-col Equipment + full-width Pet -->
+                    <div class="mt-3 space-y-2 border-t border-slate-800/80 pt-2.5">
+                      {#if thConfig.blacksmithUnlocked || slot.equipment.length > 0}
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {#each slot.equipment as eq (eq.uid)}
+                            {@const eqItem = getItemById(eq.itemId)}
+                            {#if eqItem}
+                              <div
+                                class="flex w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-1.5 text-xs {eq.locked
+                                  ? 'border-amber-400/50 bg-amber-500/10 text-amber-100'
+                                  : 'border-slate-800 bg-slate-900/90 text-slate-200'}"
+                              >
+                                <div class="flex min-w-0 items-center gap-1.5">
+                                  <UnitIcon item={eqItem} size={22} />
+                                  <span class="truncate font-medium" title={eqItem.name}>{eqItem.name}</span>
+                                </div>
+                                <div class="flex shrink-0 items-center gap-0.5">
+                                  <button
+                                    type="button"
+                                    disabled={spinStore.isSpinning}
+                                    onclick={() =>
+                                      triggerRespin({
+                                        kind: 'pairedEquipment',
+                                        heroUid: slot.uid,
+                                        equipUid: eq.uid,
+                                      })}
+                                    class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300 disabled:opacity-40"
+                                    title="Re-spin equipment ini"
+                                    aria-label="Re-spin {eqItem.name}"
+                                  >
+                                    <RotateCw class="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={spinStore.isSpinning}
+                                    onclick={() =>
+                                      spinStore.toggleLock({
+                                        kind: 'pairedEquipment',
+                                        heroUid: slot.uid,
+                                        equipUid: eq.uid,
+                                      })}
+                                    class="rounded p-1 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}"
+                                    title={eq.locked ? 'Buka kunci' : 'Kunci equipment'}
+                                    aria-label="Kunci {eqItem.name}"
+                                  >
+                                    {#if eq.locked}
+                                      <Lock class="h-3 w-3" />
+                                    {:else}
+                                      <Unlock class="h-3 w-3" />
+                                    {/if}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={spinStore.isSpinning}
+                                    onclick={() =>
+                                      spinStore.removeSlot({
+                                        kind: 'pairedEquipment',
+                                        heroUid: slot.uid,
+                                        equipUid: eq.uid,
+                                      })}
+                                    class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
+                                    title="Hapus equipment"
+                                    aria-label="Hapus {eqItem.name}"
+                                  >
+                                    <X class="h-3 w-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            {/if}
+                          {/each}
 
-                      {#if thConfig.blacksmithUnlocked && slot.equipment.length < 2}
-                        {#each Array.from({ length: 2 - slot.equipment.length }) as _}
-                          <button
-                            type="button"
-                            disabled={spinStore.isSpinning}
-                            onclick={() => spinStore.setCategory('equipment')}
-                            class="inline-flex items-center rounded-lg border border-dashed border-slate-700/80 px-2.5 py-1 text-[11px] text-slate-500 transition-colors hover:border-purple-400/60 hover:text-purple-300"
-                          >
-                            + Slot Equip
-                          </button>
-                        {/each}
+                          {#if thConfig.blacksmithUnlocked && slot.equipment.length < 2}
+                            {#each Array.from({ length: 2 - slot.equipment.length }) as _}
+                              <button
+                                type="button"
+                                disabled={spinStore.isSpinning}
+                                onclick={() => spinStore.setCategory('equipment')}
+                                class="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-700/80 px-2.5 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:border-purple-400/60 hover:text-purple-300"
+                              >
+                                + Slot Equip
+                              </button>
+                            {/each}
+                          {/if}
+                        </div>
                       {/if}
 
                       {#if thConfig.maxPets > 0}
@@ -300,46 +326,53 @@
                           {@const petItem = getItemById(slot.pet.itemId)}
                           {#if petItem}
                             <div
-                              class="inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs {slot.pet.locked
+                              class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {slot.pet.locked
                                 ? 'border-amber-400/50 bg-amber-500/10 text-amber-100'
-                                : 'border-emerald-700/50 bg-emerald-950/40 text-emerald-100'}"
+                                : 'border-emerald-700/50 bg-emerald-950/35 text-emerald-100'}"
                             >
-                              <UnitIcon item={petItem} size={22} />
-                              <span class="font-medium">{petItem.name}</span>
-                              <button
-                                type="button"
-                                disabled={spinStore.isSpinning}
-                                onclick={() => triggerRespin({ kind: 'pairedPet', heroUid: slot.uid })}
-                                class="rounded p-0.5 text-emerald-300/70 hover:text-amber-300"
-                                title="Re-spin Pet ini"
-                                aria-label="Re-spin {petItem.name}"
-                              >
-                                <RotateCw class="h-3 w-3" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={spinStore.isSpinning}
-                                onclick={() => spinStore.toggleLock({ kind: 'pairedPet', heroUid: slot.uid })}
-                                class="rounded p-0.5 {slot.pet.locked ? 'text-amber-300' : 'text-emerald-300/60 hover:text-white'}"
-                                title={slot.pet.locked ? 'Buka kunci Pet' : 'Kunci Pet'}
-                                aria-label="Kunci {petItem.name}"
-                              >
-                                {#if slot.pet.locked}
-                                  <Lock class="h-3 w-3" />
-                                {:else}
-                                  <Unlock class="h-3 w-3" />
-                                {/if}
-                              </button>
-                              <button
-                                type="button"
-                                disabled={spinStore.isSpinning}
-                                onclick={() => spinStore.removeSlot({ kind: 'pairedPet', heroUid: slot.uid })}
-                                class="rounded p-0.5 text-emerald-300/60 hover:text-rose-300"
-                                title="Hapus Pet"
-                                aria-label="Hapus {petItem.name}"
-                              >
-                                <X class="h-3 w-3" />
-                              </button>
+                              <div class="flex min-w-0 items-center gap-2">
+                                <UnitIcon item={petItem} size={22} />
+                                <span class="truncate font-semibold" title={petItem.name}>{petItem.name}</span>
+                                <span class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                                  Pet
+                                </span>
+                              </div>
+                              <div class="flex shrink-0 items-center gap-0.5">
+                                <button
+                                  type="button"
+                                  disabled={spinStore.isSpinning}
+                                  onclick={() => triggerRespin({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="rounded p-1 text-emerald-300/75 hover:bg-emerald-900/50 hover:text-amber-300"
+                                  title="Re-spin Pet ini"
+                                  aria-label="Re-spin {petItem.name}"
+                                >
+                                  <RotateCw class="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={spinStore.isSpinning}
+                                  onclick={() => spinStore.toggleLock({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="rounded p-1 {slot.pet.locked ? 'text-amber-300' : 'text-emerald-300/65 hover:bg-emerald-900/50 hover:text-white'}"
+                                  title={slot.pet.locked ? 'Buka kunci Pet' : 'Kunci Pet'}
+                                  aria-label="Kunci {petItem.name}"
+                                >
+                                  {#if slot.pet.locked}
+                                    <Lock class="h-3 w-3" />
+                                  {:else}
+                                    <Unlock class="h-3 w-3" />
+                                  {/if}
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={spinStore.isSpinning}
+                                  onclick={() => spinStore.removeSlot({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="rounded p-1 text-emerald-300/65 hover:bg-rose-500/20 hover:text-rose-300"
+                                  title="Hapus Pet"
+                                  aria-label="Hapus {petItem.name}"
+                                >
+                                  <X class="h-3 w-3" />
+                                </button>
+                              </div>
                             </div>
                           {/if}
                         {:else}
@@ -347,7 +380,7 @@
                             type="button"
                             disabled={spinStore.isSpinning}
                             onclick={() => spinStore.setCategory('pets')}
-                            class="inline-flex items-center rounded-lg border border-dashed border-emerald-800/70 px-2.5 py-1 text-[11px] text-emerald-500/80 transition-colors hover:border-emerald-400/60 hover:text-emerald-300"
+                            class="flex w-full items-center justify-center rounded-lg border border-dashed border-emerald-800/70 px-2.5 py-1.5 text-[11px] font-medium text-emerald-500/80 transition-colors hover:border-emerald-400/60 hover:text-emerald-300"
                           >
                             + Slot Pet
                           </button>
@@ -366,56 +399,60 @@
               <div class="mb-2 text-[11px] font-bold tracking-wide text-purple-300 uppercase">
                 Equipment Belum Terpasang Hero (Unpaired)
               </div>
-              <div class="flex flex-wrap gap-2">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedEquipment as eq (eq.uid)}
                   {@const eqItem = getItemById(eq.itemId)}
                   {#if eqItem}
                     <div
-                      class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs {eq.locked
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {eq.locked
                         ? 'border-amber-400/60 bg-amber-500/10 text-amber-100'
                         : 'border-slate-700 bg-slate-900 text-slate-200'}"
                     >
-                      <UnitIcon item={eqItem} size={24} />
-                      <span>
-                        <strong class="font-semibold">{eqItem.name}</strong>
-                        <span class="ml-1 text-[10px] text-purple-300">
-                          ({getHeroById(eq.heroId)?.name ?? eq.heroId})
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => triggerRespin({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                        class="rounded p-0.5 text-slate-400 hover:text-amber-300"
-                        title="Re-spin"
-                        aria-label="Re-spin {eqItem.name}"
-                      >
-                        <RotateCw class="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => spinStore.toggleLock({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                        class="rounded p-0.5 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:text-white'}"
-                        title="Kunci"
-                        aria-label="Kunci {eqItem.name}"
-                      >
-                        {#if eq.locked}
-                          <Lock class="h-3 w-3" />
-                        {:else}
-                          <Unlock class="h-3 w-3" />
-                        {/if}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => spinStore.removeSlot({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                        class="rounded p-0.5 text-slate-500 hover:text-rose-300"
-                        title="Hapus"
-                        aria-label="Hapus {eqItem.name}"
-                      >
-                        <X class="h-3 w-3" />
-                      </button>
+                      <div class="flex min-w-0 items-center gap-2">
+                        <UnitIcon item={eqItem} size={24} />
+                        <div class="min-w-0 leading-tight">
+                          <div class="truncate font-semibold">{eqItem.name}</div>
+                          <div class="truncate text-[10px] text-purple-300">
+                            {getHeroById(eq.heroId)?.name ?? eq.heroId}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => triggerRespin({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300"
+                          title="Re-spin"
+                          aria-label="Re-spin {eqItem.name}"
+                        >
+                          <RotateCw class="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.toggleLock({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="rounded p-1 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}"
+                          title="Kunci"
+                          aria-label="Kunci {eqItem.name}"
+                        >
+                          {#if eq.locked}
+                            <Lock class="h-3 w-3" />
+                          {:else}
+                            <Unlock class="h-3 w-3" />
+                          {/if}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.removeSlot({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
+                          title="Hapus"
+                          aria-label="Hapus {eqItem.name}"
+                        >
+                          <X class="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
                   {/if}
                 {/each}
@@ -429,51 +466,55 @@
               <div class="mb-2 text-[11px] font-bold tracking-wide text-emerald-300 uppercase">
                 Pets Cadangan (Otomatis Terpasang Saat Spin Hero)
               </div>
-              <div class="flex flex-wrap gap-2">
+              <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedPets as pet (pet.uid)}
                   {@const petItem = getItemById(pet.itemId)}
                   {#if petItem}
                     <div
-                      class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs {pet.locked
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {pet.locked
                         ? 'border-amber-400/60 bg-amber-500/10 text-amber-100'
                         : 'border-emerald-800/80 bg-slate-900 text-emerald-100'}"
                     >
-                      <UnitIcon item={petItem} size={24} />
-                      <span class="font-semibold">{petItem.name}</span>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => triggerRespin({ kind: 'unpairedPet', petUid: pet.uid })}
-                        class="rounded p-0.5 text-slate-400 hover:text-amber-300"
-                        title="Re-spin"
-                        aria-label="Re-spin {petItem.name}"
-                      >
-                        <RotateCw class="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => spinStore.toggleLock({ kind: 'unpairedPet', petUid: pet.uid })}
-                        class="rounded p-0.5 {pet.locked ? 'text-amber-300' : 'text-slate-500 hover:text-white'}"
-                        title="Kunci"
-                        aria-label="Kunci {petItem.name}"
-                      >
-                        {#if pet.locked}
-                          <Lock class="h-3 w-3" />
-                        {:else}
-                          <Unlock class="h-3 w-3" />
-                        {/if}
-                      </button>
-                      <button
-                        type="button"
-                        disabled={spinStore.isSpinning}
-                        onclick={() => spinStore.removeSlot({ kind: 'unpairedPet', petUid: pet.uid })}
-                        class="rounded p-0.5 text-slate-500 hover:text-rose-300"
-                        title="Hapus"
-                        aria-label="Hapus {petItem.name}"
-                      >
-                        <X class="h-3 w-3" />
-                      </button>
+                      <div class="flex min-w-0 items-center gap-2">
+                        <UnitIcon item={petItem} size={24} />
+                        <span class="truncate font-semibold">{petItem.name}</span>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => triggerRespin({ kind: 'unpairedPet', petUid: pet.uid })}
+                          class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300"
+                          title="Re-spin"
+                          aria-label="Re-spin {petItem.name}"
+                        >
+                          <RotateCw class="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.toggleLock({ kind: 'unpairedPet', petUid: pet.uid })}
+                          class="rounded p-1 {pet.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}"
+                          title="Kunci"
+                          aria-label="Kunci {petItem.name}"
+                        >
+                          {#if pet.locked}
+                            <Lock class="h-3 w-3" />
+                          {:else}
+                            <Unlock class="h-3 w-3" />
+                          {/if}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.removeSlot({ kind: 'unpairedPet', petUid: pet.uid })}
+                          class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
+                          title="Hapus"
+                          aria-label="Hapus {petItem.name}"
+                        >
+                          <X class="h-3 w-3" />
+                        </button>
+                      </div>
                     </div>
                   {/if}
                 {/each}
@@ -483,38 +524,44 @@
         </div>
       {/if}
 
-      <!-- 2. Troops -->
+      <!-- 2. Troops (Clean Uniform Grid with 1 Most Relevant Role) -->
       {#if spinStore.loadout.troops.length > 0}
         <div>
-          <h3 class="mb-2 text-xs font-bold tracking-wider text-slate-300 uppercase">
+          <h3 class="mb-2.5 text-xs font-bold tracking-wider text-slate-300 uppercase">
             Troops ({spinStore.loadout.troops.length})
           </h3>
-          <div class="flex flex-wrap gap-2">
+          <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {#each spinStore.loadout.troops as entry (entry.uid)}
               {@const item = getItemById(entry.itemId) as TroopItem | undefined}
               {#if item}
+                {@const primaryRole = getPrimaryDisplayRole(item.roles, spinStore.filters.roles)}
                 <div
-                  class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 {entry.locked
+                  class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 transition-colors {entry.locked
                     ? 'border-amber-400/60 bg-amber-500/10'
                     : 'border-slate-800 bg-slate-950/80'}"
                 >
-                  <UnitIcon {item} size={30} />
-                  <div class="leading-tight">
-                    <div class="text-xs font-bold text-white">{item.name}</div>
-                    <div class="mt-0.5 flex flex-wrap gap-1">
-                      {#each item.roles as role}
-                        <span class="rounded bg-slate-800 px-1 py-0.2 text-[9px] font-semibold text-slate-300">
-                          {role}
+                  <div class="flex min-w-0 items-center gap-2.5">
+                    <UnitIcon {item} size={34} />
+                    <div class="min-w-0 leading-tight">
+                      <div class="truncate text-xs font-bold text-white" title={item.name}>
+                        {item.name}
+                      </div>
+                      <div class="mt-1 flex items-center gap-1">
+                        <span
+                          title="Semua role: {item.roles.join(', ')}"
+                          class="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                        >
+                          {primaryRole}
                         </span>
-                      {/each}
+                      </div>
                     </div>
                   </div>
-                  <div class="ml-1 flex items-center gap-0.5">
+                  <div class="flex shrink-0 items-center gap-0.5">
                     <button
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => triggerRespin({ kind: 'troop', uid: entry.uid })}
-                      class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300"
+                      class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
                       title="Re-spin"
                       aria-label="Re-spin {item.name}"
                     >
@@ -524,7 +571,7 @@
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => spinStore.toggleLock({ kind: 'troop', uid: entry.uid })}
-                      class="rounded p-1 {lockClasses(entry.locked)}"
+                      class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
                       title="Kunci"
                       aria-label="Kunci {item.name}"
                     >
@@ -538,7 +585,7 @@
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => spinStore.removeSlot({ kind: 'troop', uid: entry.uid })}
-                      class="rounded p-1 text-slate-400 hover:bg-rose-500/20 hover:text-rose-300"
+                      class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
                       title="Hapus"
                       aria-label="Hapus {item.name}"
                     >
@@ -552,179 +599,210 @@
         </div>
       {/if}
 
-      <!-- 3. Super Troops, Spells & Siege -->
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        {#if spinStore.loadout.superTroops.length > 0}
-          <div>
-            <h3 class="mb-2 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">
-              Super Troops ({spinStore.loadout.superTroops.length}/{spinStore.filters.realisticLimits ? thConfig.maxSuperTroops : '∞'})
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              {#each spinStore.loadout.superTroops as entry (entry.uid)}
-                {@const item = getItemById(entry.itemId) as SuperTroopItem | undefined}
-                {#if item}
-                  <div
-                    class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 {entry.locked
-                      ? 'border-amber-400/60 bg-amber-500/10'
-                      : 'border-fuchsia-800/50 bg-fuchsia-950/20'}"
-                  >
-                    <UnitIcon {item} size={28} />
-                    <span class="text-xs font-bold text-white">{item.name}</span>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => triggerRespin({ kind: 'superTroop', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-amber-300"
-                      title="Re-spin"
-                      aria-label="Re-spin {item.name}"
+      <!-- 3. Super Troops, Spells & Siege (Uniform Full-Width Cards per Column) -->
+      {#if spinStore.loadout.superTroops.length > 0 || spinStore.loadout.spells.length > 0 || spinStore.loadout.siegeMachines.length > 0}
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {#if spinStore.loadout.superTroops.length > 0}
+            <div>
+              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">
+                Super Troops ({spinStore.loadout.superTroops.length}/{spinStore.filters.realisticLimits ? thConfig.maxSuperTroops : '∞'})
+              </h3>
+              <div class="grid grid-cols-1 gap-2">
+                {#each spinStore.loadout.superTroops as entry (entry.uid)}
+                  {@const item = getItemById(entry.itemId) as SuperTroopItem | undefined}
+                  {#if item}
+                    {@const primaryRole = getPrimaryDisplayRole(item.roles, spinStore.filters.roles)}
+                    <div
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
+                        ? 'border-amber-400/60 bg-amber-500/10'
+                        : 'border-fuchsia-800/50 bg-fuchsia-950/20'}"
                     >
-                      <RotateCw class="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.toggleLock({ kind: 'superTroop', uid: entry.uid })}
-                      class="rounded p-0.5 {lockClasses(entry.locked)}"
-                      title="Kunci"
-                      aria-label="Kunci {item.name}"
-                    >
-                      {#if entry.locked}
-                        <Lock class="h-3.5 w-3.5" />
-                      {:else}
-                        <Unlock class="h-3.5 w-3.5" />
-                      {/if}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.removeSlot({ kind: 'superTroop', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-rose-300"
-                      title="Hapus"
-                      aria-label="Hapus {item.name}"
-                    >
-                      <X class="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                {/if}
-              {/each}
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <UnitIcon {item} size={32} />
+                        <div class="min-w-0 leading-tight">
+                          <div class="truncate text-xs font-bold text-white" title={item.name}>
+                            {item.name}
+                          </div>
+                          <div class="mt-0.5">
+                            <span
+                              title="Semua role: {item.roles.join(', ')}"
+                              class="inline-block rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                            >
+                              {primaryRole}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => triggerRespin({ kind: 'superTroop', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          title="Re-spin"
+                          aria-label="Re-spin {item.name}"
+                        >
+                          <RotateCw class="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.toggleLock({ kind: 'superTroop', uid: entry.uid })}
+                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
+                          title="Kunci"
+                          aria-label="Kunci {item.name}"
+                        >
+                          {#if entry.locked}
+                            <Lock class="h-3.5 w-3.5" />
+                          {:else}
+                            <Unlock class="h-3.5 w-3.5" />
+                          {/if}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.removeSlot({ kind: 'superTroop', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
+                          title="Hapus"
+                          aria-label="Hapus {item.name}"
+                        >
+                          <X class="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
+                {/each}
+              </div>
             </div>
-          </div>
-        {/if}
+          {/if}
 
-        {#if spinStore.loadout.spells.length > 0}
-          <div>
-            <h3 class="mb-2 text-xs font-bold tracking-wider text-sky-300 uppercase">
-              Spells ({spinStore.loadout.spells.length})
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              {#each spinStore.loadout.spells as entry (entry.uid)}
-                {@const item = getItemById(entry.itemId)}
-                {#if item}
-                  <div
-                    class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 {entry.locked
-                      ? 'border-amber-400/60 bg-amber-500/10'
-                      : 'border-sky-900/60 bg-slate-950/80'}"
-                  >
-                    <UnitIcon {item} size={28} />
-                    <span class="text-xs font-bold text-white">{item.name}</span>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => triggerRespin({ kind: 'spell', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-amber-300"
-                      title="Re-spin"
-                      aria-label="Re-spin {item.name}"
+          {#if spinStore.loadout.spells.length > 0}
+            <div>
+              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-sky-300 uppercase">
+                Spells ({spinStore.loadout.spells.length})
+              </h3>
+              <div class="grid grid-cols-1 gap-2">
+                {#each spinStore.loadout.spells as entry (entry.uid)}
+                  {@const item = getItemById(entry.itemId)}
+                  {#if item}
+                    <div
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
+                        ? 'border-amber-400/60 bg-amber-500/10'
+                        : 'border-sky-900/60 bg-slate-950/80'}"
                     >
-                      <RotateCw class="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.toggleLock({ kind: 'spell', uid: entry.uid })}
-                      class="rounded p-0.5 {lockClasses(entry.locked)}"
-                      title="Kunci"
-                      aria-label="Kunci {item.name}"
-                    >
-                      {#if entry.locked}
-                        <Lock class="h-3.5 w-3.5" />
-                      {:else}
-                        <Unlock class="h-3.5 w-3.5" />
-                      {/if}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.removeSlot({ kind: 'spell', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-rose-300"
-                      title="Hapus"
-                      aria-label="Hapus {item.name}"
-                    >
-                      <X class="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                {/if}
-              {/each}
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <UnitIcon {item} size={32} />
+                        <span class="truncate text-xs font-bold text-white" title={item.name}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => triggerRespin({ kind: 'spell', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          title="Re-spin"
+                          aria-label="Re-spin {item.name}"
+                        >
+                          <RotateCw class="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.toggleLock({ kind: 'spell', uid: entry.uid })}
+                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
+                          title="Kunci"
+                          aria-label="Kunci {item.name}"
+                        >
+                          {#if entry.locked}
+                            <Lock class="h-3.5 w-3.5" />
+                          {:else}
+                            <Unlock class="h-3.5 w-3.5" />
+                          {/if}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.removeSlot({ kind: 'spell', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
+                          title="Hapus"
+                          aria-label="Hapus {item.name}"
+                        >
+                          <X class="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
+                {/each}
+              </div>
             </div>
-          </div>
-        {/if}
+          {/if}
 
-        {#if spinStore.loadout.siegeMachines.length > 0}
-          <div>
-            <h3 class="mb-2 text-xs font-bold tracking-wider text-rose-300 uppercase">
-              Siege Machine ({spinStore.loadout.siegeMachines.length}/{spinStore.filters.realisticLimits ? thConfig.maxSiege : '∞'})
-            </h3>
-            <div class="flex flex-wrap gap-2">
-              {#each spinStore.loadout.siegeMachines as entry (entry.uid)}
-                {@const item = getItemById(entry.itemId)}
-                {#if item}
-                  <div
-                    class="inline-flex items-center gap-2 rounded-xl border px-2.5 py-1.5 {entry.locked
-                      ? 'border-amber-400/60 bg-amber-500/10'
-                      : 'border-rose-900/60 bg-slate-950/80'}"
-                  >
-                    <UnitIcon {item} size={28} />
-                    <span class="text-xs font-bold text-white">{item.name}</span>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => triggerRespin({ kind: 'siege', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-amber-300"
-                      title="Re-spin"
-                      aria-label="Re-spin {item.name}"
+          {#if spinStore.loadout.siegeMachines.length > 0}
+            <div>
+              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-rose-300 uppercase">
+                Siege Machine ({spinStore.loadout.siegeMachines.length}/{spinStore.filters.realisticLimits ? thConfig.maxSiege : '∞'})
+              </h3>
+              <div class="grid grid-cols-1 gap-2">
+                {#each spinStore.loadout.siegeMachines as entry (entry.uid)}
+                  {@const item = getItemById(entry.itemId)}
+                  {#if item}
+                    <div
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
+                        ? 'border-amber-400/60 bg-amber-500/10'
+                        : 'border-rose-900/60 bg-slate-950/80'}"
                     >
-                      <RotateCw class="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.toggleLock({ kind: 'siege', uid: entry.uid })}
-                      class="rounded p-0.5 {lockClasses(entry.locked)}"
-                      title="Kunci"
-                      aria-label="Kunci {item.name}"
-                    >
-                      {#if entry.locked}
-                        <Lock class="h-3.5 w-3.5" />
-                      {:else}
-                        <Unlock class="h-3.5 w-3.5" />
-                      {/if}
-                    </button>
-                    <button
-                      type="button"
-                      disabled={spinStore.isSpinning}
-                      onclick={() => spinStore.removeSlot({ kind: 'siege', uid: entry.uid })}
-                      class="rounded p-0.5 text-slate-400 hover:text-rose-300"
-                      title="Hapus"
-                      aria-label="Hapus {item.name}"
-                    >
-                      <X class="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                {/if}
-              {/each}
+                      <div class="flex min-w-0 items-center gap-2.5">
+                        <UnitIcon {item} size={32} />
+                        <span class="truncate text-xs font-bold text-white" title={item.name}>
+                          {item.name}
+                        </span>
+                      </div>
+                      <div class="flex shrink-0 items-center gap-0.5">
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => triggerRespin({ kind: 'siege', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          title="Re-spin"
+                          aria-label="Re-spin {item.name}"
+                        >
+                          <RotateCw class="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.toggleLock({ kind: 'siege', uid: entry.uid })}
+                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
+                          title="Kunci"
+                          aria-label="Kunci {item.name}"
+                        >
+                          {#if entry.locked}
+                            <Lock class="h-3.5 w-3.5" />
+                          {:else}
+                            <Unlock class="h-3.5 w-3.5" />
+                          {/if}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={spinStore.isSpinning}
+                          onclick={() => spinStore.removeSlot({ kind: 'siege', uid: entry.uid })}
+                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
+                          title="Hapus"
+                          aria-label="Hapus {item.name}"
+                        >
+                          <X class="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
+                {/each}
+              </div>
             </div>
-          </div>
-        {/if}
-      </div>
+          {/if}
+        </div>
+      {/if}
     </div>
   {/if}
 </section>
