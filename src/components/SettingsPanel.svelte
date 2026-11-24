@@ -108,17 +108,17 @@
 
   <!-- Quick Behavior Toggles -->
   <div class="space-y-2.5 border-t border-slate-800 pt-3.5">
-    <div class="flex flex-wrap gap-2">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
       <button
         type="button"
         onclick={() => spinStore.setFastSpin(!spinStore.fastSpin)}
         aria-pressed={spinStore.fastSpin}
-        class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors {spinStore.fastSpin
+        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors {spinStore.fastSpin
           ? 'border-purple-400/60 bg-purple-500/20 text-purple-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:text-slate-200'}"
+          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
       >
-        <Zap class="h-3.5 w-3.5" />
-        Fast Spin
+        <Zap class="h-3.5 w-3.5 shrink-0" />
+        <span class="truncate">Fast Spin</span>
       </button>
 
       <button
@@ -126,12 +126,12 @@
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.toggleRealisticLimits()}
         aria-pressed={spinStore.filters.realisticLimits}
-        class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {spinStore.filters.realisticLimits
+        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 {spinStore.filters.realisticLimits
           ? 'border-amber-400/60 bg-amber-500/15 text-amber-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:text-slate-200'}"
+          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
       >
-        <ShieldCheck class="h-3.5 w-3.5" />
-        Batas Realistis TH
+        <ShieldCheck class="h-3.5 w-3.5 shrink-0" />
+        <span class="truncate">Batas Realistis TH</span>
       </button>
 
       <button
@@ -139,12 +139,12 @@
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.toggleAntiDuplicate()}
         aria-pressed={spinStore.filters.antiDuplicate}
-        class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 {spinStore.filters.antiDuplicate
+        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 {spinStore.filters.antiDuplicate
           ? 'border-sky-400/60 bg-sky-500/15 text-sky-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:text-slate-200'}"
+          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
       >
-        <CopyX class="h-3.5 w-3.5" />
-        Anti-Duplikat
+        <CopyX class="h-3.5 w-3.5 shrink-0" />
+        <span class="truncate">Anti-Duplikat</span>
       </button>
     </div>
 
