@@ -65,7 +65,7 @@
               : `${spinStore.filters.roles.length} role aktif`}
           </span>
         </div>
-        <div class="flex flex-wrap gap-1.5">
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {#each ALL_TROOP_ROLES as role (role)}
             {@const active = spinStore.filters.roles.includes(role)}
             <button
@@ -73,11 +73,11 @@
               disabled={spinStore.isSpinning}
               onclick={() => spinStore.toggleRole(role)}
               aria-pressed={active}
-              class="rounded-lg border px-2.5 py-1 text-xs font-semibold transition-all disabled:opacity-50 {active
+              class="flex w-full items-center justify-center rounded-xl border px-2.5 py-2 text-xs font-semibold transition-all disabled:opacity-50 {active
                 ? 'border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
                 : 'border-slate-700/80 bg-slate-950/70 text-slate-400 hover:border-slate-500 hover:text-slate-200'}"
             >
-              {role}
+              <span class="truncate">{role}</span>
             </button>
           {/each}
         </div>

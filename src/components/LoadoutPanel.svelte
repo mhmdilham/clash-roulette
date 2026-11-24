@@ -102,18 +102,18 @@
       </p>
     </div>
 
-    <div class="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+    <div class="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-72 lg:w-auto lg:grid-cols-4">
       <button
         type="button"
         disabled={isEmpty}
         onclick={handleCopyText}
-        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-amber-400/60 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-amber-400/60 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
         {#if copied}
-          <Check class="h-3.5 w-3.5 text-emerald-400" />
+          <Check class="h-3.5 w-3.5 shrink-0 text-emerald-400" />
           Tersalin!
         {:else}
-          <Copy class="h-3.5 w-3.5 text-amber-300" />
+          <Copy class="h-3.5 w-3.5 shrink-0 text-amber-300" />
           Copy Teks
         {/if}
       </button>
@@ -122,9 +122,9 @@
         type="button"
         disabled={isEmpty || exporting}
         onclick={handleDownloadPng}
-        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-purple-500/50 bg-purple-600/20 px-3 py-2 text-xs font-semibold text-purple-100 transition-colors hover:bg-purple-600/35 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-purple-500/50 bg-purple-600/20 px-3 py-2 text-xs font-semibold text-purple-100 transition-colors hover:bg-purple-600/35 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
-        <Download class="h-3.5 w-3.5" />
+        <Download class="h-3.5 w-3.5 shrink-0" />
         {exporting ? 'Membuat PNG...' : 'Export PNG'}
       </button>
 
@@ -132,10 +132,10 @@
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearUnlocked()}
-        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700/80 bg-slate-950/70 px-2.5 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-700/80 bg-slate-950/70 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
         title="Hapus semua slot yang tidak dikunci"
       >
-        <Eraser class="h-3.5 w-3.5" />
+        <Eraser class="h-3.5 w-3.5 shrink-0" />
         Clear Unlocked
       </button>
 
@@ -143,9 +143,9 @@
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearAll()}
-        class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 px-2.5 py-2 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
       >
-        <Trash2 class="h-3.5 w-3.5" />
+        <Trash2 class="h-3.5 w-3.5 shrink-0" />
         Clear All
       </button>
     </div>
