@@ -347,14 +347,9 @@
   </div>
 
   <!-- Pool info line under wheel -->
-  <div class="flex flex-wrap items-center justify-center gap-2 text-xs text-slate-400">
+  <div class="flex items-center justify-center text-xs text-slate-400">
     <span class="rounded-md bg-slate-900/90 px-2.5 py-1 ring-1 ring-slate-800">
-      Di roda: <strong class="text-amber-300">{sliceCount}</strong> / {spinStore.poolResult.totalAtTh} unit (TH{spinStore.townHall})
+      <strong class="text-amber-300">{sliceCount}</strong> / {spinStore.poolResult.totalAtTh} unit
     </span>
-    {#if spinStore.fastSpin}
-      <span class="rounded-md bg-purple-500/15 px-2 py-1 text-purple-300 ring-1 ring-purple-500/30">
-        ⚡ Fast Spin Aktif
-      </span>
-    {/if}
   </div>
 </div>

@@ -87,19 +87,14 @@
 >
   <!-- Header & Action Bar -->
   <div class="mb-5 flex flex-col justify-between gap-3 border-b border-slate-800 pb-4 sm:flex-row sm:items-center">
-    <div>
-      <div class="flex items-center gap-2">
-        <h2 class="text-base font-extrabold text-white">Hasil Loadout</h2>
-        <span class="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300 ring-1 ring-amber-400/30">
-          TH{spinStore.townHall}
-        </span>
-        <span class="text-xs text-slate-400">
-          {spinStore.totalPickedCount} terpilih
-        </span>
-      </div>
-      <p class="mt-0.5 text-xs text-slate-400">
-        Klik <strong class="text-slate-200">↻</strong> untuk re-spin 1 slot, <strong class="text-slate-200">🔒</strong> untuk kunci saat Clear Unlocked.
-      </p>
+    <div class="flex items-center gap-2">
+      <h2 class="text-base font-extrabold text-white">Loadout</h2>
+      <span class="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300 ring-1 ring-amber-400/30">
+        TH{spinStore.townHall}
+      </span>
+      <span class="text-xs text-slate-400">
+        {spinStore.totalPickedCount} terpilih
+      </span>
     </div>
 
     <div class="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-72 lg:w-auto lg:grid-cols-4">
@@ -152,11 +147,9 @@
   </div>
 
   {#if isEmpty}
-    <div class="rounded-xl border border-dashed border-slate-800 bg-slate-950/50 px-4 py-10 text-center">
-      <p class="text-sm font-semibold text-slate-300">Belum ada unit terpilih.</p>
-      <p class="mt-1 text-xs text-slate-500">
-        Klik tombol <strong class="text-amber-300">SPIN!</strong> di tengah roda untuk mulai meracik serangan acakmu.
-      </p>
+    <div class="rounded-xl border border-dashed border-slate-800 bg-slate-950/50 px-4 py-8 text-center">
+      <p class="text-sm font-semibold text-slate-300">Belum ada unit terpilih</p>
+      <p class="mt-1 text-xs text-slate-500">Klik <strong class="text-amber-300">SPIN!</strong> untuk mulai.</p>
     </div>
   {:else}
     <div class="space-y-6">
@@ -397,7 +390,7 @@
           {#if spinStore.loadout.unpairedEquipment.length > 0}
             <div class="mt-3 rounded-xl border border-purple-500/30 bg-purple-500/5 p-3">
               <div class="mb-2 text-[11px] font-bold tracking-wide text-purple-300 uppercase">
-                Equipment Belum Terpasang Hero (Unpaired)
+                Equipment Cadangan
               </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedEquipment as eq (eq.uid)}
@@ -464,7 +457,7 @@
           {#if spinStore.loadout.unpairedPets.length > 0}
             <div class="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
               <div class="mb-2 text-[11px] font-bold tracking-wide text-emerald-300 uppercase">
-                Pets Cadangan (Otomatis Terpasang Saat Spin Hero)
+                Pets Cadangan
               </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedPets as pet (pet.uid)}

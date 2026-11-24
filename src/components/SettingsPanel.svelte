@@ -31,10 +31,7 @@
   class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl backdrop-blur-sm sm:p-5"
 >
   <div class="mb-4 flex items-center justify-between gap-2">
-    <div>
-      <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Pengaturan Spin</h2>
-      <p class="text-xs text-slate-400">Pilih Town Hall & kategori roda</p>
-    </div>
+    <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Pengaturan</h2>
     <button
       type="button"
       disabled={spinStore.isSpinning}
@@ -59,12 +56,7 @@
       class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-inner transition-colors focus:border-amber-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
     >
       {#each thLevelsDesc as th (th.level)}
-        <option value={th.level}>
-          Town Hall {th.level}
-          {th.level === 19 ? ' (Terbaru)' : ''}
-          {th.maxActiveHeroes > 0 ? ` — Maks ${th.maxActiveHeroes} Hero` : ''}
-          {th.maxPets > 0 ? `, ${th.maxPets} Pet` : ''}
-        </option>
+        <option value={th.level}>Town Hall {th.level}</option>
       {/each}
     </select>
   </div>

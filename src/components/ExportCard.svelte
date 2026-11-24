@@ -81,7 +81,7 @@
     {#if loadout.unpairedEquipment.length > 0}
       <div class="mb-4">
         <div class="mb-1.5 text-xs font-bold tracking-wider text-purple-300 uppercase">
-          Equipment (Belum Terpasang)
+          Equipment Cadangan
         </div>
         <div class="grid grid-cols-3 gap-2">
           {#each loadout.unpairedEquipment as eq (eq.uid)}

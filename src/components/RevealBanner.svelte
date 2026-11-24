@@ -19,7 +19,7 @@
       <div class="min-w-0">
         <div class="flex items-center gap-1.5 text-[11px] font-bold tracking-wide text-amber-300 uppercase">
           <Sparkles class="h-3 w-3" />
-          <span>{reveal.replacedItemName ? `Mengganti ${reveal.replacedItemName}` : 'Hasil Spin Terbaru'}</span>
+          <span>{reveal.replacedItemName ? `Mengganti ${reveal.replacedItemName}` : 'Terpilih'}</span>
         </div>
         <div class="truncate text-base font-extrabold text-white">{item.name}</div>
         <div class="mt-0.5 flex flex-wrap items-center gap-1">

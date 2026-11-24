@@ -38,7 +38,7 @@
   <div class="mb-3 flex items-center justify-between gap-2">
     <div class="flex items-center gap-2">
       <Filter class="h-4 w-4 text-amber-300" />
-      <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Filter Kontekstual</h2>
+      <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Filter</h2>
     </div>
     {#if (cat === 'troops' || cat === 'superTroops') && hasTroopFilters}
       <button
@@ -58,12 +58,10 @@
     <div class="space-y-3">
       <div>
         <div class="mb-1.5 flex items-center justify-between">
-          <span class="text-xs font-semibold text-slate-300">Role / Tag Unit</span>
-          <span class="text-[11px] text-slate-400">
-            {spinStore.filters.roles.length === 0
-              ? 'Semua OFF = Murni Random'
-              : `${spinStore.filters.roles.length} role aktif`}
-          </span>
+          <span class="text-xs font-semibold text-slate-300">Role</span>
+          {#if spinStore.filters.roles.length > 0}
+            <span class="text-[11px] text-amber-300/90">{spinStore.filters.roles.length} aktif</span>
+          {/if}
         </div>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {#each ALL_TROOP_ROLES as role (role)}
@@ -139,28 +137,28 @@
         <div class="space-y-1">
           <div class="flex items-center gap-1.5 text-xs font-bold text-slate-100">
             <Link2 class="h-3.5 w-3.5 text-purple-400" />
-            <span>Hanya Relevan ({cat === 'equipment' ? 'Hero → Equipment' : 'Equipment → Hero'})</span>
+            <span>Hanya Relevan</span>
           </div>
           <p class="text-[11px] leading-relaxed text-slate-400">
             {#if cat === 'equipment'}
               {#if chosenHeroNames.length > 0}
                 {#if pool.relevanceEffective}
-                  Menyaring equipment khusus untuk Hero terpilih: <strong class="text-slate-200">{chosenHeroNames.join(', ')}</strong> (maks 2/Hero).
+                  Khusus equipment milik: <strong class="text-slate-200">{chosenHeroNames.join(', ')}</strong>.
                 {:else}
-                  Filter dimatikan — semua equipment TH{spinStore.townHall} ditampilkan di roda.
+                  Menampilkan semua equipment.
                 {/if}
               {:else}
-                Otomatis aktif begitu kamu sudah spin minimal 1 Hero.
+                Aktif otomatis setelah memilih Hero.
               {/if}
             {:else}
               {#if unpairedEquipHeroNames.length > 0}
                 {#if pool.relevanceEffective}
-                  Menyaring Hero pemilik Equipment yang belum terpasang: <strong class="text-slate-200">{unpairedEquipHeroNames.join(', ')}</strong>.
+                  Khusus Hero pemilik equipment cadangan: <strong class="text-slate-200">{unpairedEquipHeroNames.join(', ')}</strong>.
                 {:else}
-                  Filter dimatikan — semua Hero TH{spinStore.townHall} ditampilkan di roda.
+                  Menampilkan semua Hero.
                 {/if}
               {:else}
-                Semua Equipment sudah terpasang / belum ada Equipment cadangan — semua sisa Hero bebas di-spin.
+                Aktif otomatis jika ada equipment cadangan.
               {/if}
             {/if}
           </p>
@@ -190,12 +188,12 @@
   {:else if cat === 'siegeMachines'}
     <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
       <div class="space-y-1">
-        <div class="text-xs font-bold text-slate-100">Termasuk Donasi CC (TH10+)</div>
+        <div class="text-xs font-bold text-slate-100">Donasi Clan Castle</div>
         <p class="text-[11px] leading-relaxed text-slate-400">
           {#if spinStore.filters.includeCcSiege}
-            Semua Siege Machine tersedia mulai TH10 sesuai kapasitas donasi Clan Castle.
+            Menampilkan semua Siege Machine dari donasi CC.
           {:else}
-            Hanya menampilkan Siege Machine yang sudah unlock di Workshop (TH12+).
+            Hanya Siege Machine yang terbuka di Workshop.
           {/if}
         </p>
       </div>
@@ -220,11 +218,11 @@
 
   <!-- 4. Spells & Pets Info -->
   {:else}
-    <p class="text-xs leading-relaxed text-slate-400">
+    <p class="text-xs text-slate-400">
       {#if cat === 'pets'}
-        Menampilkan seluruh Pet yang unlock di Pet House TH{spinStore.townHall}. Pet otomatis dipasangkan ke Hero aktif yang belum memiliki Pet (maks {pool.slotUsage.max ?? '∞'}).
+        Pet otomatis dipasangkan ke Hero yang masih kosong.
       {:else}
-        Menampilkan seluruh Elixir & Dark Spell yang unlock di TH{spinStore.townHall}. Gunakan tombol <strong>Anti-Duplikat</strong> di atas jika tidak ingin spell yang sama muncul dua kali.
+        Semua Elixir & Dark Spell yang tersedia ditampilkan di roda.
       {/if}
     </p>
   {/if}
