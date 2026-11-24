@@ -14,7 +14,7 @@ function eq(
     heroId,
     rarity,
     unlockTh,
-    iconPath: `/assets/coc/equipment/${id}.png`,
+    iconPath: `/assets/coc/equipment/${id}.webp`,
   };
 }
 

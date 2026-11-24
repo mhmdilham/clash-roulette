@@ -6,7 +6,7 @@ function pet(id: string, name: string, unlockTh: number): PetItem {
     name,
     category: 'pets',
     unlockTh,
-    iconPath: `/assets/coc/pets/${id}.png`,
+    iconPath: `/assets/coc/pets/${id}.webp`,
   };
 }
 

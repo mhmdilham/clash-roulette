@@ -18,7 +18,7 @@ function superTroop(
     movement,
     unlockTh,
     roles,
-    iconPath: `/assets/coc/superTroops/${id}.png`,
+    iconPath: `/assets/coc/superTroops/${id}.webp`,
   };
 }
 

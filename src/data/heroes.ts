@@ -7,7 +7,7 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 4,
     movement: 'ground',
-    iconPath: '/assets/coc/heroes/barbarian-king.png',
+    iconPath: '/assets/coc/heroes/barbarian-king.webp',
   },
   {
     id: 'archer-queen',
@@ -15,7 +15,7 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 8,
     movement: 'ground',
-    iconPath: '/assets/coc/heroes/archer-queen.png',
+    iconPath: '/assets/coc/heroes/archer-queen.webp',
   },
   {
     id: 'minion-prince',
@@ -23,7 +23,7 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 9,
     movement: 'air',
-    iconPath: '/assets/coc/heroes/minion-prince.png',
+    iconPath: '/assets/coc/heroes/minion-prince.webp',
   },
   {
     id: 'grand-warden',
@@ -31,7 +31,7 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 11,
     movement: 'air',
-    iconPath: '/assets/coc/heroes/grand-warden.png',
+    iconPath: '/assets/coc/heroes/grand-warden.webp',
   },
   {
     id: 'royal-champion',
@@ -39,7 +39,7 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 13,
     movement: 'ground',
-    iconPath: '/assets/coc/heroes/royal-champion.png',
+    iconPath: '/assets/coc/heroes/royal-champion.webp',
   },
   {
     id: 'dragon-duke',
@@ -47,6 +47,6 @@ export const HEROES: readonly HeroItem[] = [
     category: 'heroes',
     unlockTh: 15,
     movement: 'air',
-    iconPath: '/assets/coc/heroes/dragon-duke.png',
+    iconPath: '/assets/coc/heroes/dragon-duke.webp',
   },
 ] as const;

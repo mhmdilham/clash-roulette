@@ -6,6 +6,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'src', 'data');
 const OUT_DIR = path.join(ROOT, 'public', 'assets', 'coc');
+const FORCE = process.argv.includes('--force');
+const THUMB_SIZE = '128';
 
 const DATA_FILES = [
   { file: 'heroes.ts', category: 'heroes' },
@@ -18,14 +20,14 @@ const DATA_FILES = [
 ];
 
 const WIKI_TITLE_OVERRIDES = {
-  'barbarian': 'Barbarian/Home Village',
-  'archer': 'Archer/Home Village',
-  'giant': 'Giant/Home Village',
-  'minion': 'Minion/Home Village',
+  barbarian: 'Barbarian/Home Village',
+  archer: 'Archer/Home Village',
+  giant: 'Giant/Home Village',
+  minion: 'Minion/Home Village',
   'baby-dragon': 'Baby Dragon/Home Village',
-  'witch': 'Witch/Home Village',
-  'pekka': 'P.E.K.K.A',
-  'lassi': 'L.A.S.S.I',
+  witch: 'Witch/Home Village',
+  pekka: 'P.E.K.K.A',
+  lassi: 'L.A.S.S.I',
 };
 
 function parseItemsFromSource(content, category) {
@@ -44,68 +46,54 @@ function parseItemsFromSource(content, category) {
   return items;
 }
 
-async function fetchWikiThumbnails(titles) {
-  const map = new Map();
-  const batchSize = 20;
-  for (let i = 0; i < titles.length; i += batchSize) {
-    const chunk = titles.slice(i, i + batchSize);
-    const url = new URL('https://clashofclans.fandom.com/api.php');
-    url.searchParams.set('action', 'query');
-    url.searchParams.set('titles', chunk.join('|'));
-    url.searchParams.set('prop', 'pageimages');
-    url.searchParams.set('pithumbsize', '160');
-    url.searchParams.set('pilicense', 'any');
-    url.searchParams.set('redirects', '1');
-    url.searchParams.set('format', 'json');
-
-    try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/1.0' },
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      const redirects = new Map();
-      for (const r of data?.query?.redirects ?? []) {
-        redirects.set(r.from, r.to);
-      }
-      const normalized = new Map();
-      for (const n of data?.query?.normalized ?? []) {
-        normalized.set(n.from, n.to);
-      }
-      const pagesByTitle = new Map();
-      for (const page of Object.values(data?.query?.pages ?? {})) {
-        if (page?.thumbnail?.source) {
-          pagesByTitle.set(page.title, page.thumbnail.source);
-        }
-      }
-      for (const orig of chunk) {
-        const norm = normalized.get(orig) ?? orig;
-        const finalTitle = redirects.get(norm) ?? norm;
-        const thumb = pagesByTitle.get(finalTitle) ?? pagesByTitle.get(norm);
-        if (thumb) map.set(orig, thumb);
-      }
-    } catch {
-      // Network/batch failure handled gracefully per item
-    }
+function getPreferredFileCandidates(item) {
+  switch (item.category) {
+    case 'equipment':
+      return [
+        `File:Hero Equipment ${item.name}.png`,
+        `File:${item.name} Equipment.png`,
+        `File:${item.name}.png`,
+        `File:${item.name} info.png`,
+      ];
+    case 'spells':
+      return [
+        `File:${item.name} info.png`,
+        `File:Avatar ${item.name}.png`,
+        `File:${item.name}.png`,
+      ];
+    case 'heroes':
+      return [
+        `File:Avatar ${item.name}.png`,
+        `File:${item.name} info.png`,
+        `File:${item.name}.png`,
+      ];
+    default:
+      // troops, superTroops, pets, siegeMachines
+      return [
+        `File:Avatar ${item.name}.png`,
+        `File:${item.name} info.png`,
+        `File:${item.name}.png`,
+      ];
   }
-  return map;
 }
 
-async function fetchFileImageUrls(fileTitles) {
+async function fetchFileImageInfo(fileTitles) {
   const map = new Map();
+  const unique = [...new Set(fileTitles)];
   const batchSize = 20;
-  for (let i = 0; i < fileTitles.length; i += batchSize) {
-    const chunk = fileTitles.slice(i, i + batchSize);
+  for (let i = 0; i < unique.length; i += batchSize) {
+    const chunk = unique.slice(i, i + batchSize);
     const url = new URL('https://clashofclans.fandom.com/api.php');
     url.searchParams.set('action', 'query');
     url.searchParams.set('titles', chunk.join('|'));
     url.searchParams.set('prop', 'imageinfo');
-    url.searchParams.set('iiprop', 'url');
-    url.searchParams.set('iiurlwidth', '160');
+    url.searchParams.set('iiprop', 'url|size');
+    url.searchParams.set('iiurlwidth', THUMB_SIZE);
     url.searchParams.set('format', 'json');
+
     try {
       const res = await fetch(url, {
-        headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/1.0' },
+        headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/2.0' },
       });
       if (!res.ok) continue;
       const data = await res.json();
@@ -114,8 +102,12 @@ async function fetchFileImageUrls(fileTitles) {
       const pagesByTitle = new Map();
       for (const page of Object.values(data?.query?.pages ?? {})) {
         const info = page?.imageinfo?.[0];
-        if (info?.thumburl || info?.url) {
-          pagesByTitle.set(page.title, info.thumburl || info.url);
+        const src = info?.thumburl || info?.url;
+        if (src) {
+          const w = info.thumbwidth || info.width || 128;
+          const h = info.thumbheight || info.height || 128;
+          const ratio = Math.max(w, h) / Math.max(1, Math.min(w, h));
+          pagesByTitle.set(page.title, { url: src, ratio });
         }
       }
       for (const orig of chunk) {
@@ -130,13 +122,54 @@ async function fetchFileImageUrls(fileTitles) {
   return map;
 }
 
+async function fetchWikiThumbnails(titles) {
+  const map = new Map();
+  const unique = [...new Set(titles)];
+  const batchSize = 20;
+  for (let i = 0; i < unique.length; i += batchSize) {
+    const chunk = unique.slice(i, i + batchSize);
+    const url = new URL('https://clashofclans.fandom.com/api.php');
+    url.searchParams.set('action', 'query');
+    url.searchParams.set('titles', chunk.join('|'));
+    url.searchParams.set('prop', 'pageimages');
+    url.searchParams.set('pithumbsize', THUMB_SIZE);
+    url.searchParams.set('pilicense', 'any');
+    url.searchParams.set('redirects', '1');
+    url.searchParams.set('format', 'json');
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/2.0' },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const redirects = new Map();
+      for (const r of data?.query?.redirects ?? []) redirects.set(r.from, r.to);
+      const normalized = new Map();
+      for (const n of data?.query?.normalized ?? []) normalized.set(n.from, n.to);
+      const pagesByTitle = new Map();
+      for (const page of Object.values(data?.query?.pages ?? {})) {
+        if (page?.thumbnail?.source) {
+          pagesByTitle.set(page.title, page.thumbnail.source);
+        }
+      }
+      for (const orig of chunk) {
+        const norm = normalized.get(orig) ?? orig;
+        const finalTitle = redirects.get(norm) ?? norm;
+        const thumb = pagesByTitle.get(finalTitle) ?? pagesByTitle.get(norm);
+        if (thumb) map.set(orig, thumb);
+      }
+    } catch {
+      // ignore batch error
+    }
+  }
+  return map;
+}
+
 function isValidStaticRaster(buf) {
-  if (buf.length < 200 || buf.length > 250_000) return false;
-  // PNG: 89 50 4E 47
+  if (buf.length < 200 || buf.length > 200_000) return false;
   const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
-  // JPEG: FF D8 FF
   const isJpeg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
-  // Static WebP: RIFF....WEBP without ANIM chunk
   const isWebp =
     buf.subarray(0, 4).toString('ascii') === 'RIFF' &&
     buf.subarray(8, 12).toString('ascii') === 'WEBP' &&
@@ -146,7 +179,10 @@ function isValidStaticRaster(buf) {
 
 async function downloadFile(url, destPath) {
   const res = await fetch(url, {
-    headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/1.0' },
+    headers: {
+      'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/2.0',
+      Accept: 'image/webp,image/png,*/*;q=0.8',
+    },
   });
   if (!res.ok) return false;
   const ct = res.headers.get('content-type') || '';
@@ -168,15 +204,17 @@ async function main() {
   const pending = [];
   let skipped = 0;
   for (const item of allItems) {
-    const dest = path.join(OUT_DIR, item.category, `${item.id}.png`);
-    try {
-      const stat = await fs.stat(dest);
-      if (stat.size > 200) {
-        skipped += 1;
-        continue;
+    const dest = path.join(OUT_DIR, item.category, `${item.id}.webp`);
+    if (!FORCE) {
+      try {
+        const stat = await fs.stat(dest);
+        if (stat.size > 200) {
+          skipped += 1;
+          continue;
+        }
+      } catch {
+        // File not cached yet
       }
-    } catch {
-      // File not yet cached
     }
     pending.push({ ...item, dest });
   }
@@ -184,69 +222,51 @@ async function main() {
   console.log(`Total CoC items: ${allItems.length} (${skipped} cached, ${pending.length} to fetch)`);
   if (pending.length === 0) return;
 
+  // Step 1: Prefer clean square Avatar / Info / Equipment File: icons first
+  const fileMapById = new Map();
+  const allFileCandidates = [];
+  for (const item of pending) {
+    const candidates = getPreferredFileCandidates(item);
+    fileMapById.set(item.id, candidates);
+    allFileCandidates.push(...candidates);
+  }
+  const fileInfoMap = await fetchFileImageInfo(allFileCandidates);
+
+  // Step 2: Fetch pageimages as fallback for any item without a clean square File: match
+  const pageTitles = [];
   const titleByItem = new Map();
-  const titles = [];
   for (const item of pending) {
     const primaryTitle = WIKI_TITLE_OVERRIDES[item.id] ?? item.name;
     titleByItem.set(item.id, primaryTitle);
-    titles.push(primaryTitle);
+    pageTitles.push(primaryTitle);
+    if (primaryTitle !== item.name) pageTitles.push(item.name);
   }
+  const pageThumbs = await fetchWikiThumbnails(pageTitles);
 
-  const thumbs = await fetchWikiThumbnails(titles);
   let downloaded = 0;
   const missing = [];
-
-  // Second pass with plain name for any override that didn't return a thumbnail
-  const retryTitles = [];
-  for (const item of pending) {
-    const primary = titleByItem.get(item.id);
-    if (!thumbs.has(primary) && primary !== item.name) {
-      retryTitles.push(item.name);
-    }
-  }
-  if (retryTitles.length > 0) {
-    const retryThumbs = await fetchWikiThumbnails(retryTitles);
-    for (const [k, v] of retryThumbs.entries()) {
-      thumbs.set(k, v);
-    }
-  }
-
-  // Third pass: direct File: lookup for equipment/spells/troops (or if pageimage wasn't a valid static raster)
-  const fileCandidates = [];
-  const fileMapById = new Map();
-  for (const item of pending) {
-    const candidates =
-      item.category === 'equipment'
-        ? [
-            `File:Hero Equipment ${item.name}.png`,
-            `File:${item.name} Equipment.png`,
-            `File:${item.name}.png`,
-          ]
-        : [
-            `File:Avatar ${item.name}.png`,
-            `File:${item.name} info.png`,
-            `File:${item.name}.png`,
-          ];
-    fileMapById.set(item.id, candidates);
-    fileCandidates.push(...candidates);
-  }
-  const fileUrls = fileCandidates.length > 0 ? await fetchFileImageUrls(fileCandidates) : new Map();
-
-  // Polite bounded concurrency (5 at a time)
   const queue = [...pending];
-  const workers = Array.from({ length: 5 }, async () => {
+
+  const workers = Array.from({ length: 6 }, async () => {
     while (queue.length > 0) {
       const item = queue.shift();
       if (!item) break;
-      const urlsToTry = [];
-      const primaryThumb = thumbs.get(titleByItem.get(item.id)) ?? thumbs.get(item.name);
-      if (primaryThumb) urlsToTry.push(primaryThumb);
-      for (const c of fileMapById.get(item.id) ?? []) {
-        if (fileUrls.has(c)) urlsToTry.push(fileUrls.get(c));
+
+      const candidates = fileMapById.get(item.id) ?? [];
+      // Order square candidates (ratio <= 1.35) ahead of taller/wider ones, then pageimages fallback
+      const squareUrls = [];
+      const fallbackUrls = [];
+      for (const c of candidates) {
+        const info = fileInfoMap.get(c);
+        if (!info) continue;
+        if (info.ratio <= 1.35) squareUrls.push(info.url);
+        else fallbackUrls.push(info.url);
       }
+      const pThumb = pageThumbs.get(titleByItem.get(item.id)) ?? pageThumbs.get(item.name);
+      if (pThumb) fallbackUrls.push(pThumb);
 
       let ok = false;
-      for (const u of urlsToTry) {
+      for (const u of [...squareUrls, ...fallbackUrls]) {
         if (await downloadFile(u, item.dest)) {
           ok = true;
           break;

@@ -12,7 +12,7 @@ function spell(
     category: 'spells',
     resource,
     unlockTh,
-    iconPath: `/assets/coc/spells/${id}.png`,
+    iconPath: `/assets/coc/spells/${id}.webp`,
   };
 }
 

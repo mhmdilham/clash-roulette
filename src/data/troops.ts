@@ -16,7 +16,7 @@ function troop(
     movement,
     unlockTh,
     roles,
-    iconPath: `/assets/coc/troops/${id}.png`,
+    iconPath: `/assets/coc/troops/${id}.webp`,
   };
 }
 

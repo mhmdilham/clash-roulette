@@ -6,7 +6,7 @@ function siege(id: string, name: string, unlockTh: number): SiegeMachineItem {
     name,
     category: 'siegeMachines',
     unlockTh,
-    iconPath: `/assets/coc/siegeMachines/${id}.png`,
+    iconPath: `/assets/coc/siegeMachines/${id}.webp`,
   };
 }
 
