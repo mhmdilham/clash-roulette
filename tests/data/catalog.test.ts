@@ -37,6 +37,7 @@ describe('CoC TH1-TH19 catalog integrity', () => {
     expect(getItemById('troop-launcher')?.category).toBe('siegeMachines');
     expect(PETS.length).toBeGreaterThanOrEqual(12);
     expect(SIEGE_MACHINES.length).toBeGreaterThanOrEqual(8);
+    expect(SPELLS.length).toBeGreaterThanOrEqual(18);
   });
 
   it('links every equipment to a valid heroId and gives every hero >= 2 equipment', () => {
