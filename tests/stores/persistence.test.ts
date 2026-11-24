@@ -113,4 +113,59 @@ describe('persistence', () => {
     expect(loaded.loadout.heroes[0].equipment.map((e) => e.itemId)).toEqual(['giant-gauntlet']);
     expect(loaded.loadout.troops.map((t) => t.itemId)).toEqual(['dragon']);
   });
+
+  it('preserves sandbox >4 heroes on reload when realisticLimits is false and deduplicates corrupt duplicate/empty UIDs', () => {
+    const storage = makeMemoryStorage({
+      [STORAGE_KEY]: JSON.stringify({
+        version: 1,
+        townHall: 19,
+        activeCategory: 'heroes',
+        filters: {
+          roles: ['Main', 'Main'],
+          matchMode: 'OR',
+          movement: 'all',
+          includeCcSiege: true,
+          realisticLimits: false,
+          antiDuplicate: true,
+          equipRelevanceOverride: null,
+          heroRelevanceOverride: null,
+        },
+        loadout: {
+          heroes: [
+            { uid: 'dup', heroId: 'barbarian-king', locked: false, equipment: [], pet: null },
+            { uid: 'dup', heroId: 'archer-queen', locked: false, equipment: [], pet: null },
+            { uid: '', heroId: 'minion-prince', locked: false, equipment: [], pet: null },
+            { uid: 'h4', heroId: 'grand-warden', locked: false, equipment: [], pet: null },
+            { uid: 'h5', heroId: 'royal-champion', locked: false, equipment: [], pet: null },
+            { uid: 'h6', heroId: 'barbarian-king', locked: false, equipment: [], pet: null }, // duplicate heroId
+          ],
+          unpairedEquipment: [
+            { uid: 'dup', itemId: 'fire-heart', heroId: 'dragon-duke', locked: false },
+          ],
+          unpairedPets: [],
+          troops: [
+            { uid: 't-dup', itemId: 'dragon', locked: false },
+            { uid: 't-dup', itemId: 'healer', locked: false },
+          ],
+          superTroops: [],
+          spells: [],
+          siegeMachines: [],
+        },
+        fastSpin: false,
+        soundEnabled: true,
+        soundVolume: 0.5,
+      }),
+    });
+
+    const loaded = loadPersistedState(storage);
+    expect(loaded.filters.roles).toEqual(['Main']);
+    expect(loaded.loadout.heroes).toHaveLength(5);
+    const allUids = [
+      ...loaded.loadout.heroes.map((h) => h.uid),
+      ...loaded.loadout.unpairedEquipment.map((e) => e.uid),
+      ...loaded.loadout.troops.map((t) => t.uid),
+    ];
+    expect(allUids.every((u) => u.length > 0)).toBe(true);
+    expect(new Set(allUids).size).toBe(allUids.length);
+  });
 });

@@ -63,6 +63,7 @@ describe('CoC TH1-TH19 catalog integrity', () => {
 
   it('exposes categories accurately by TH including CC Siege toggle', () => {
     expect(getAvailableCategories(1, true)).toEqual(['troops']);
+    expect(TROOPS.filter((t) => t.unlockTh <= 1).map((t) => t.id)).toEqual(['barbarian']);
     expect(getAvailableCategories(4, true)).toEqual(['troops', 'heroes']);
     expect(getAvailableCategories(10, true)).toContain('siegeMachines');
     expect(getAvailableCategories(10, false)).not.toContain('siegeMachines');

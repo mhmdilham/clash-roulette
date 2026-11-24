@@ -416,13 +416,46 @@ export function clearUnlockedLoadout(loadout: LoadoutState): LoadoutState {
   return next;
 }
 
+export function slotTargetExists(loadout: LoadoutState, target: SlotTarget): boolean {
+  switch (target.kind) {
+    case 'hero':
+      return loadout.heroes.some((h) => h.uid === target.heroUid);
+    case 'pairedEquipment': {
+      const hero = loadout.heroes.find((h) => h.uid === target.heroUid);
+      return Boolean(hero?.equipment.some((e) => e.uid === target.equipUid));
+    }
+    case 'unpairedEquipment':
+      return loadout.unpairedEquipment.some((e) => e.uid === target.equipUid);
+    case 'pairedPet': {
+      const hero = loadout.heroes.find((h) => h.uid === target.heroUid);
+      return Boolean(hero?.pet);
+    }
+    case 'unpairedPet':
+      return loadout.unpairedPets.some((p) => p.uid === target.petUid);
+    case 'troop':
+      return loadout.troops.some((t) => t.uid === target.uid);
+    case 'superTroop':
+      return loadout.superTroops.some((t) => t.uid === target.uid);
+    case 'spell':
+      return loadout.spells.some((s) => s.uid === target.uid);
+    case 'siege':
+      return loadout.siegeMachines.some((s) => s.uid === target.uid);
+  }
+}
+
 export function pruneLoadoutForTownHall(
   loadout: LoadoutState,
   newTh: number,
   includeCcSiege: boolean,
+  enforceCaps = true,
 ): { loadout: LoadoutState; removedNames: string[] } {
   const thConfig = getTownHallConfig(newTh);
   const removedNames: string[] = [];
+
+  const maxHeroes = enforceCaps ? thConfig.maxActiveHeroes : Infinity;
+  const maxPets = thConfig.maxPets === 0 ? 0 : enforceCaps ? thConfig.maxPets : Infinity;
+  const maxSuper = thConfig.maxSuperTroops === 0 ? 0 : enforceCaps ? thConfig.maxSuperTroops : Infinity;
+  const maxSiege = thConfig.maxSiege === 0 ? 0 : enforceCaps ? thConfig.maxSiege : Infinity;
 
   const isUnlocked = (itemId: string): boolean => {
     const item = getItemById(itemId);
@@ -439,13 +472,13 @@ export function pruneLoadoutForTownHall(
 
   // 1. Prune heroes by TH unlock & TH maxActiveHeroes cap
   for (const hero of loadout.heroes) {
-    if (!isUnlocked(hero.heroId) || next.heroes.length >= thConfig.maxActiveHeroes) {
+    if (!isUnlocked(hero.heroId) || next.heroes.length >= maxHeroes) {
       recordRemoved(hero.heroId);
       for (const eq of hero.equipment) {
         recordRemoved(eq.itemId);
       }
       if (hero.pet) {
-        if (isUnlocked(hero.pet.itemId) && thConfig.maxPets > 0) {
+        if (isUnlocked(hero.pet.itemId) && maxPets > 0) {
           next.unpairedPets.push({ ...hero.pet });
         } else {
           recordRemoved(hero.pet.itemId);
@@ -465,7 +498,7 @@ export function pruneLoadoutForTownHall(
 
     let keptPet: PetEntry | null = null;
     if (hero.pet) {
-      if (isUnlocked(hero.pet.itemId) && thConfig.maxPets > 0) {
+      if (isUnlocked(hero.pet.itemId) && maxPets > 0) {
         keptPet = { ...hero.pet };
       } else {
         recordRemoved(hero.pet.itemId);
@@ -495,7 +528,7 @@ export function pruneLoadoutForTownHall(
   next.unpairedPets = [];
 
   for (const pet of candidateUnpairedPets) {
-    if (isUnlocked(pet.itemId) && totalPets < thConfig.maxPets) {
+    if (isUnlocked(pet.itemId) && totalPets < maxPets) {
       const openHero = next.heroes.find((h) => h.pet === null);
       if (openHero) {
         openHero.pet = pet;
@@ -514,7 +547,7 @@ export function pruneLoadoutForTownHall(
     else recordRemoved(t.itemId);
   }
   for (const st of loadout.superTroops) {
-    if (isUnlocked(st.itemId) && next.superTroops.length < thConfig.maxSuperTroops) {
+    if (isUnlocked(st.itemId) && next.superTroops.length < maxSuper) {
       next.superTroops.push({ ...st });
     } else {
       recordRemoved(st.itemId);
@@ -525,7 +558,7 @@ export function pruneLoadoutForTownHall(
     else recordRemoved(sp.itemId);
   }
   for (const sg of loadout.siegeMachines) {
-    if (isUnlocked(sg.itemId) && next.siegeMachines.length < thConfig.maxSiege) {
+    if (isUnlocked(sg.itemId) && next.siegeMachines.length < maxSiege) {
       next.siegeMachines.push({ ...sg });
     } else {
       recordRemoved(sg.itemId);

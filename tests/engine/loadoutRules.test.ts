@@ -194,4 +194,26 @@ describe('loadoutRules — Hero, Equipment & Pet pairing', () => {
       ]),
     );
   });
+
+  it('preserves >4 heroes and >1 siege when enforceCaps is false (sandbox mode) while still pruning locked TH items', () => {
+    let loadout = createEmptyLoadout();
+    for (const id of [
+      'barbarian-king',
+      'archer-queen',
+      'minion-prince',
+      'grand-warden',
+      'royal-champion',
+      'dragon-duke',
+    ]) {
+      loadout = applySpinResult(loadout, mustItem(id), { realisticLimits: false });
+    }
+    loadout = applySpinResult(loadout, mustItem('wall-wrecker'), { realisticLimits: false });
+    loadout = applySpinResult(loadout, mustItem('battle-blimp'), { realisticLimits: false });
+
+    const { loadout: pruned, removedNames } = pruneLoadoutForTownHall(loadout, 14, true, false);
+    // Dragon Duke (TH15) is pruned, but all 5 unlocked heroes (TH<=14) and both sieges survive in sandbox mode
+    expect(pruned.heroes.map((h) => h.heroId)).toHaveLength(5);
+    expect(pruned.siegeMachines).toHaveLength(2);
+    expect(removedNames).toContain('Dragon Duke');
+  });
 });

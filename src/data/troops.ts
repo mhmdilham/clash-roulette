@@ -23,8 +23,8 @@ function troop(
 export const TROOPS: readonly TroopItem[] = [
   // Elixir Troops
   troop('barbarian', 'Barbarian', 'elixir', 'ground', 1, ['Support', 'Clean-up']),
-  troop('archer', 'Archer', 'elixir', 'ground', 1, ['Support', 'Clean-up', 'Funnel']),
-  troop('giant', 'Giant', 'elixir', 'ground', 1, ['Tank', 'Support']),
+  troop('archer', 'Archer', 'elixir', 'ground', 2, ['Support', 'Clean-up', 'Funnel']),
+  troop('giant', 'Giant', 'elixir', 'ground', 2, ['Tank', 'Support']),
   troop('goblin', 'Goblin', 'elixir', 'ground', 2, ['Clean-up', 'Funnel']),
   troop('wall-breaker', 'Wall Breaker', 'elixir', 'ground', 3, ['Support']),
   troop('balloon', 'Balloon', 'elixir', 'air', 4, ['Main', 'Damage Dealer', 'Support']),

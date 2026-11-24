@@ -30,7 +30,6 @@
       alt={item.name}
       width={size}
       height={size}
-      loading="lazy"
       decoding="async"
       class="h-full w-full object-contain p-0.5"
       onerror={() => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
   import { RotateCw, X } from 'lucide-svelte';
   import { spinStore } from '../stores/spinStore.svelte';
@@ -101,10 +102,12 @@
     const seq = spinStore.respinRequestSeq;
     if (seq > lastHandledRespinSeq) {
       lastHandledRespinSeq = seq;
-      if (wheelContainer && typeof window !== 'undefined' && window.innerWidth < 1024) {
-        wheelContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      startSpinAnimation();
+      untrack(() => {
+        if (wheelContainer && typeof window !== 'undefined' && window.innerWidth < 1024) {
+          wheelContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        startSpinAnimation();
+      });
     }
   });
 
@@ -123,30 +126,30 @@
   }
 
   function formatSliceLabel(name: string, count: number): string {
-    const maxLen = count > 26 ? 12 : count > 16 ? 15 : 18;
+    const maxLen = count > 26 ? 12 : count > 16 ? 14 : 15;
     if (name.length <= maxLen) return name;
     return `${name.slice(0, maxLen - 1)}…`;
   }
 
   function getLabelFontSize(count: number): number {
-    if (count <= 6) return 13.5;
-    if (count <= 12) return 11.5;
-    if (count <= 20) return 9.8;
+    if (count <= 6) return 11.5;
+    if (count <= 12) return 10.5;
+    if (count <= 20) return 9.5;
     if (count <= 28) return 8.6;
     return 7.8;
   }
 
   function getIconSize(count: number): number {
-    if (count <= 6) return 44;
-    if (count <= 12) return 34;
+    if (count <= 6) return 40;
+    if (count <= 12) return 32;
     if (count <= 20) return 26;
     if (count <= 28) return 21;
     return 18;
   }
 
   function getIconRadius(count: number): number {
-    if (count <= 6) return 155;
-    if (count <= 12) return 172;
+    if (count <= 6) return 174;
+    if (count <= 12) return 180;
     return 186;
   }
 </script>
@@ -210,21 +213,6 @@
       <g style:transform="rotate({rotationDeg}deg)" style:transform-origin="{CX}px {CY}px">
         {#if sliceCount === 0}
           <circle cx={CX} cy={CY} r={RADIUS} fill="#141520" stroke="#334155" stroke-width="1.5" />
-          <text
-            x={CX}
-            y={CY - 78}
-            text-anchor="middle"
-            fill="#94a3b8"
-            font-size="14"
-            font-weight="600"
-          >
-            {spinStore.poolResult.emptyReason === 'slot-full'
-              ? 'Slot Kategori Sudah Penuh'
-              : 'Tidak Ada Unit di Roda'}
-          </text>
-          <text x={CX} y={CY - 58} text-anchor="middle" fill="#64748b" font-size="11.5">
-            Gunakan tombol pemulihan di panel filter
-          </text>
         {:else}
           {@const step = 360 / sliceCount}
           {@const iconSize = getIconSize(sliceCount)}
@@ -235,7 +223,7 @@
             {@const endDeg = (idx + 1) * step}
             {@const midDeg = getSliceMidAngle(idx, sliceCount)}
             {@const iconPos = polarToCartesian(CX, CY, iconRadius, midDeg)}
-            {@const textRadius = sliceCount === 1 ? 105 : iconRadius - iconSize * 0.65 - 8}
+            {@const textRadius = sliceCount === 1 ? 142 : iconRadius - iconSize * 0.58 - 6}
             {@const theme = getUnitFallbackTheme(item)}
             <g>
               <path
@@ -309,6 +297,25 @@
           <circle cx={pegPos.x} cy={pegPos.y} r="2.6" fill="#fef3c7" opacity="0.85" />
         {/each}
       </g>
+
+      <!-- Upright non-rotating empty-wheel message -->
+      {#if sliceCount === 0}
+        <text
+          x={CX}
+          y={CY - 102}
+          text-anchor="middle"
+          fill="#e2e8f0"
+          font-size="14"
+          font-weight="700"
+        >
+          {spinStore.poolResult.emptyReason === 'slot-full'
+            ? 'Slot Kategori Sudah Penuh'
+            : 'Tidak Ada Unit di Roda'}
+        </text>
+        <text x={CX} y={CY - 82} text-anchor="middle" fill="#94a3b8" font-size="11.5">
+          Gunakan tombol pemulihan di panel filter
+        </text>
+      {/if}
 
       <!-- Fixed 3 o'clock pointer -->
       <g

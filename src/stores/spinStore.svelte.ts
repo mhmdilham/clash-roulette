@@ -20,6 +20,7 @@ import {
   createEmptyLoadout,
   pruneLoadoutForTownHall,
   removeLoadoutItem,
+  slotTargetExists,
   toggleSlotLock,
 } from '../engine/loadoutRules';
 import { computeEligiblePool, type PoolFilterResult } from '../engine/poolFilter';
@@ -134,8 +135,12 @@ class SpinStore {
         this.loadout,
         clamped,
         this.filters.includeCcSiege,
+        this.filters.realisticLimits,
       );
       this.loadout = loadout;
+      if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+        this.lastReveal = null;
+      }
       if (removedNames.length > 0) {
         const preview =
           removedNames.length <= 4
@@ -204,8 +209,12 @@ class SpinStore {
       this.loadout,
       this.townHall,
       nextInclude,
+      this.filters.realisticLimits,
     );
     this.loadout = loadout;
+    if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+      this.lastReveal = null;
+    }
     if (removedNames.length > 0) {
       this.showToast(`Siege Workshop saja — dihapus: ${removedNames.join(', ')}`);
     }
@@ -284,7 +293,7 @@ class SpinStore {
   }
 
   private findLatestSlotTarget(item: SpinItem, replaced?: SlotTarget): SlotTarget | undefined {
-    if (replaced) return replaced;
+    if (replaced && slotTargetExists(this.loadout, replaced)) return replaced;
     switch (item.category) {
       case 'heroes': {
         const slot = this.loadout.heroes.find((h) => h.heroId === item.id);
@@ -450,6 +459,9 @@ class SpinStore {
     if (this.isSpinning) return;
     this.loadout = removeLoadoutItem(this.loadout, target);
     this.replaceTarget = null;
+    if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+      this.lastReveal = null;
+    }
     this.persist();
   }
 

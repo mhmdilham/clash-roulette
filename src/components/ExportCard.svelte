@@ -73,6 +73,44 @@
       </div>
     {/if}
 
+    {#if loadout.unpairedEquipment.length > 0}
+      <div class="mb-3">
+        <div class="mb-1.5 text-xs font-bold tracking-wider text-purple-300 uppercase">
+          Equipment (Belum Terpasang)
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {#each loadout.unpairedEquipment as eq (eq.uid)}
+            {@const eqItem = getItemById(eq.itemId)}
+            {#if eqItem}
+              <div class="inline-flex items-center gap-1.5 rounded-lg bg-purple-950/40 px-2.5 py-1 text-xs font-semibold text-purple-100 ring-1 ring-purple-700/50">
+                <UnitIcon item={eqItem} size={22} />
+                <span>{eqItem.name}</span>
+              </div>
+            {/if}
+          {/each}
+        </div>
+      </div>
+    {/if}
+
+    {#if loadout.unpairedPets.length > 0}
+      <div class="mb-3">
+        <div class="mb-1.5 text-xs font-bold tracking-wider text-emerald-300 uppercase">
+          Pets (Cadangan)
+        </div>
+        <div class="flex flex-wrap gap-2">
+          {#each loadout.unpairedPets as pet (pet.uid)}
+            {@const petItem = getItemById(pet.itemId)}
+            {#if petItem}
+              <div class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-950/40 px-2.5 py-1 text-xs font-semibold text-emerald-100 ring-1 ring-emerald-700/50">
+                <UnitIcon item={petItem} size={22} />
+                <span>{petItem.name}</span>
+              </div>
+            {/if}
+          {/each}
+        </div>
+      </div>
+    {/if}
+
     {#if loadout.troops.length > 0}
       <div class="mb-3">
         <div class="mb-1.5 text-xs font-bold tracking-wider text-slate-400 uppercase">Troops</div>

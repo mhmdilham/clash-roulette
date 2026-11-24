@@ -66,16 +66,36 @@ function isObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
-function sanitizeArmyEntries(raw: unknown, expectedCategory: CategoryId): ArmyEntry[] {
+let sanitizeUidSeq = 1;
+function ensureUniqueUid(rawUid: unknown, prefix: string, seenUids: Set<string>): string {
+  const candidate = typeof rawUid === 'string' ? rawUid.trim() : '';
+  if (candidate.length > 0 && !seenUids.has(candidate)) {
+    seenUids.add(candidate);
+    return candidate;
+  }
+  let generated = '';
+  do {
+    sanitizeUidSeq += 1;
+    generated = `${prefix}-s-${sanitizeUidSeq.toString(36)}`;
+  } while (seenUids.has(generated));
+  seenUids.add(generated);
+  return generated;
+}
+
+function sanitizeArmyEntries(
+  raw: unknown,
+  expectedCategory: CategoryId,
+  seenUids: Set<string>,
+): ArmyEntry[] {
   if (!Array.isArray(raw)) return [];
   const result: ArmyEntry[] = [];
   for (const entry of raw) {
     if (!isObject(entry)) continue;
-    if (typeof entry.uid !== 'string' || typeof entry.itemId !== 'string') continue;
+    if (typeof entry.itemId !== 'string') continue;
     const item = getItemById(entry.itemId);
     if (!item || item.category !== expectedCategory) continue;
     result.push({
-      uid: entry.uid,
+      uid: ensureUniqueUid(entry.uid, expectedCategory, seenUids),
       itemId: entry.itemId,
       locked: Boolean(entry.locked),
     });
@@ -83,17 +103,17 @@ function sanitizeArmyEntries(raw: unknown, expectedCategory: CategoryId): ArmyEn
   return result;
 }
 
-function sanitizeEquipmentEntries(raw: unknown): EquipmentEntry[] {
+function sanitizeEquipmentEntries(raw: unknown, seenUids: Set<string>): EquipmentEntry[] {
   if (!Array.isArray(raw)) return [];
   const result: EquipmentEntry[] = [];
   for (const entry of raw) {
     if (!isObject(entry)) continue;
-    if (typeof entry.uid !== 'string' || typeof entry.itemId !== 'string') continue;
+    if (typeof entry.itemId !== 'string') continue;
     const item = getItemById(entry.itemId);
     if (!item || item.category !== 'equipment') continue;
     const eqItem = item as EquipmentItem;
     result.push({
-      uid: entry.uid,
+      uid: ensureUniqueUid(entry.uid, 'eq', seenUids),
       itemId: eqItem.id,
       heroId: eqItem.heroId,
       locked: Boolean(entry.locked),
@@ -102,13 +122,13 @@ function sanitizeEquipmentEntries(raw: unknown): EquipmentEntry[] {
   return result;
 }
 
-function sanitizePetEntry(raw: unknown): PetEntry | null {
+function sanitizePetEntry(raw: unknown, seenUids: Set<string>): PetEntry | null {
   if (!isObject(raw)) return null;
-  if (typeof raw.uid !== 'string' || typeof raw.itemId !== 'string') return null;
+  if (typeof raw.itemId !== 'string') return null;
   const item = getItemById(raw.itemId);
   if (!item || item.category !== 'pets') return null;
   return {
-    uid: raw.uid,
+    uid: ensureUniqueUid(raw.uid, 'pet', seenUids),
     itemId: raw.itemId,
     locked: Boolean(raw.locked),
   };
@@ -117,19 +137,24 @@ function sanitizePetEntry(raw: unknown): PetEntry | null {
 function sanitizeLoadout(raw: unknown): LoadoutState {
   if (!isObject(raw)) return createEmptyLoadout();
 
+  const seenUids = new Set<string>();
+  const seenHeroIds = new Set<HeroId>();
   const heroes: HeroSlot[] = [];
   if (Array.isArray(raw.heroes)) {
     for (const slot of raw.heroes) {
       if (!isObject(slot)) continue;
-      if (typeof slot.uid !== 'string' || typeof slot.heroId !== 'string') continue;
+      if (typeof slot.heroId !== 'string') continue;
       const hero = getHeroById(slot.heroId as HeroId);
-      if (!hero) continue;
+      if (!hero || seenHeroIds.has(hero.id)) continue;
+      seenHeroIds.add(hero.id);
       heroes.push({
-        uid: slot.uid,
+        uid: ensureUniqueUid(slot.uid, 'hero', seenUids),
         heroId: hero.id,
         locked: Boolean(slot.locked),
-        equipment: sanitizeEquipmentEntries(slot.equipment).filter((e) => e.heroId === hero.id),
-        pet: sanitizePetEntry(slot.pet),
+        equipment: sanitizeEquipmentEntries(slot.equipment, seenUids).filter(
+          (e) => e.heroId === hero.id,
+        ),
+        pet: sanitizePetEntry(slot.pet, seenUids),
       });
     }
   }
@@ -137,19 +162,19 @@ function sanitizeLoadout(raw: unknown): LoadoutState {
   const unpairedPets: PetEntry[] = [];
   if (Array.isArray(raw.unpairedPets)) {
     for (const pet of raw.unpairedPets) {
-      const sanitized = sanitizePetEntry(pet);
+      const sanitized = sanitizePetEntry(pet, seenUids);
       if (sanitized) unpairedPets.push(sanitized);
     }
   }
 
   return {
     heroes,
-    unpairedEquipment: sanitizeEquipmentEntries(raw.unpairedEquipment),
+    unpairedEquipment: sanitizeEquipmentEntries(raw.unpairedEquipment, seenUids),
     unpairedPets,
-    troops: sanitizeArmyEntries(raw.troops, 'troops'),
-    superTroops: sanitizeArmyEntries(raw.superTroops, 'superTroops'),
-    spells: sanitizeArmyEntries(raw.spells, 'spells'),
-    siegeMachines: sanitizeArmyEntries(raw.siegeMachines, 'siegeMachines'),
+    troops: sanitizeArmyEntries(raw.troops, 'troops', seenUids),
+    superTroops: sanitizeArmyEntries(raw.superTroops, 'superTroops', seenUids),
+    spells: sanitizeArmyEntries(raw.spells, 'spells', seenUids),
+    siegeMachines: sanitizeArmyEntries(raw.siegeMachines, 'siegeMachines', seenUids),
   };
 }
 
@@ -158,7 +183,11 @@ function sanitizeFilters(raw: unknown): FilterState {
   if (!isObject(raw)) return defaults;
 
   const roles: TroopRole[] = Array.isArray(raw.roles)
-    ? raw.roles.filter((r): r is TroopRole => typeof r === 'string' && VALID_ROLES.has(r))
+    ? Array.from(
+        new Set(
+          raw.roles.filter((r): r is TroopRole => typeof r === 'string' && VALID_ROLES.has(r)),
+        ),
+      )
     : [];
 
   const matchMode = raw.matchMode === 'AND' ? 'AND' : 'OR';
@@ -204,7 +233,12 @@ export function loadPersistedState(
         : 'troops';
 
     const sanitizedLoadout = sanitizeLoadout(parsed.loadout);
-    const { loadout } = pruneLoadoutForTownHall(sanitizedLoadout, townHall, filters.includeCcSiege);
+    const { loadout } = pruneLoadoutForTownHall(
+      sanitizedLoadout,
+      townHall,
+      filters.includeCcSiege,
+      filters.realisticLimits,
+    );
 
     const rawVol = typeof parsed.soundVolume === 'number' && Number.isFinite(parsed.soundVolume)
       ? parsed.soundVolume

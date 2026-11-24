@@ -130,13 +130,29 @@ async function fetchFileImageUrls(fileTitles) {
   return map;
 }
 
+function isValidStaticRaster(buf) {
+  if (buf.length < 200 || buf.length > 250_000) return false;
+  // PNG: 89 50 4E 47
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  // JPEG: FF D8 FF
+  const isJpeg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  // Static WebP: RIFF....WEBP without ANIM chunk
+  const isWebp =
+    buf.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buf.subarray(8, 12).toString('ascii') === 'WEBP' &&
+    !buf.includes(Buffer.from('ANIM'));
+  return isPng || isJpeg || isWebp;
+}
+
 async function downloadFile(url, destPath) {
   const res = await fetch(url, {
     headers: { 'User-Agent': 'CoC-Attack-Spin-Asset-Fetcher/1.0' },
   });
   if (!res.ok) return false;
+  const ct = res.headers.get('content-type') || '';
+  if (!ct.toLowerCase().startsWith('image/')) return false;
   const buf = Buffer.from(await res.arrayBuffer());
-  if (buf.length < 200) return false;
+  if (!isValidStaticRaster(buf)) return false;
   await fs.mkdir(path.dirname(destPath), { recursive: true });
   await fs.writeFile(destPath, buf);
   return true;
@@ -195,12 +211,10 @@ async function main() {
     }
   }
 
-  // Third pass: direct File: lookup for equipment/spells without pageimages
+  // Third pass: direct File: lookup for equipment/spells/troops (or if pageimage wasn't a valid static raster)
   const fileCandidates = [];
   const fileMapById = new Map();
   for (const item of pending) {
-    const hasThumb = thumbs.has(titleByItem.get(item.id)) || thumbs.has(item.name);
-    if (hasThumb) continue;
     const candidates =
       item.category === 'equipment'
         ? [
@@ -208,23 +222,15 @@ async function main() {
             `File:${item.name} Equipment.png`,
             `File:${item.name}.png`,
           ]
-        : [`File:${item.name} info.png`, `File:${item.name}.png`];
+        : [
+            `File:Avatar ${item.name}.png`,
+            `File:${item.name} info.png`,
+            `File:${item.name}.png`,
+          ];
     fileMapById.set(item.id, candidates);
     fileCandidates.push(...candidates);
   }
-  if (fileCandidates.length > 0) {
-    const fileUrls = await fetchFileImageUrls(fileCandidates);
-    for (const item of pending) {
-      const candidates = fileMapById.get(item.id);
-      if (!candidates) continue;
-      for (const c of candidates) {
-        if (fileUrls.has(c)) {
-          thumbs.set(item.name, fileUrls.get(c));
-          break;
-        }
-      }
-    }
-  }
+  const fileUrls = fileCandidates.length > 0 ? await fetchFileImageUrls(fileCandidates) : new Map();
 
   // Polite bounded concurrency (5 at a time)
   const queue = [...pending];
@@ -232,12 +238,20 @@ async function main() {
     while (queue.length > 0) {
       const item = queue.shift();
       if (!item) break;
-      const thumbUrl = thumbs.get(titleByItem.get(item.id)) ?? thumbs.get(item.name);
-      if (!thumbUrl) {
-        missing.push(`${item.category}/${item.id}`);
-        continue;
+      const urlsToTry = [];
+      const primaryThumb = thumbs.get(titleByItem.get(item.id)) ?? thumbs.get(item.name);
+      if (primaryThumb) urlsToTry.push(primaryThumb);
+      for (const c of fileMapById.get(item.id) ?? []) {
+        if (fileUrls.has(c)) urlsToTry.push(fileUrls.get(c));
       }
-      const ok = await downloadFile(thumbUrl, item.dest);
+
+      let ok = false;
+      for (const u of urlsToTry) {
+        if (await downloadFile(u, item.dest)) {
+          ok = true;
+          break;
+        }
+      }
       if (ok) downloaded += 1;
       else missing.push(`${item.category}/${item.id}`);
     }
