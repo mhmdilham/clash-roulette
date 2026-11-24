@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  --scrollbar-track: #0b0d17;
+  --scrollbar-thumb: #334155;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  accent-color: #f59e0b;
+}
+
+@supports not (scrollbar-color: auto) {
+  :root {
+    scrollbar-width: auto;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 6px;
+  }
+}
+
+body {
+  background-color: #07080f;
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(168, 85, 247, 0.14), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(245, 158, 11, 0.1), transparent 40%);
+  min-height: 100vh;
+}
