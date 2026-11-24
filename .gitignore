@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.superpowers/
+.vite/
+*.local
+.DS_Store
