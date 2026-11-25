@@ -1,8 +1,33 @@
+# Dependencies
 node_modules/
+
+# Build & cache outputs
 dist/
+dist-ssr/
+.vite/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & local overrides
+.env
+.env.*
+*.local
+
+# Editor & OS files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Agent & internal planning artifacts
 .superpowers/
+docs/superpowers/
 .agents/
 .taste-skill/
-.vite/
-*.local
-.DS_Store
