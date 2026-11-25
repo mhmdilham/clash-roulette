@@ -1,17 +1,7 @@
 <script lang="ts">
-  import {
-    Copy,
-    Download,
-    Lock,
-    Unlock,
-    RotateCw,
-    Trash2,
-    X,
-    Check,
-    Eraser,
-  } from 'lucide-svelte';
+  import { Check, Copy, Download, Eraser, Lock, RotateCw, Trash2, Unlock, X } from 'lucide-svelte';
   import { getHeroById, getItemById, getTownHallConfig } from '../data';
-  import type { SlotTarget, TroopItem, SuperTroopItem, TroopRole } from '../data/types';
+  import type { SlotTarget, SuperTroopItem, TroopItem, TroopRole } from '../data/types';
   import { formatLoadoutText } from '../engine/exportFormatter';
   import { getPrimaryDisplayRole } from '../engine/poolFilter';
   import { spinStore } from '../stores/spinStore.svelte';
@@ -28,16 +18,16 @@
 
   async function handleCopyText(): Promise<void> {
     if (isEmpty) return;
-    const text = formatLoadoutText(spinStore.loadout, spinStore.townHall);
+    const text = formatLoadoutText(spinStore.loadout, spinStore.townHall, spinStore.locale);
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
-      spinStore.showToast('Loadout berhasil disalin ke clipboard (siap paste ke WA/Discord)!');
+      spinStore.showToast(spinStore.t.toastCopied);
       setTimeout(() => {
         copied = false;
       }, 2000);
     } catch {
-      spinStore.showToast('Gagal menyalin otomatis — pastikan izin clipboard browser aktif.');
+      spinStore.showToast(spinStore.t.toastCopyFailed);
     }
   }
 
@@ -45,10 +35,10 @@
     if (isEmpty || !exportCardRef || exporting) return;
     exporting = true;
     try {
-      await exportElementToPng(exportCardRef, `coc-attack-spin-th${spinStore.townHall}.png`);
-      spinStore.showToast('Kartu loadout PNG berhasil diunduh!');
+      await exportElementToPng(exportCardRef, `clash-roulette-th${spinStore.townHall}.png`);
+      spinStore.showToast(spinStore.t.toastPngSuccess);
     } catch {
-      spinStore.showToast('Gagal membuat gambar PNG. Coba lagi.');
+      spinStore.showToast(spinStore.t.toastPngFailed);
     } finally {
       exporting = false;
     }
@@ -56,24 +46,24 @@
 
   function lockClasses(locked: boolean): string {
     return locked
-      ? 'text-amber-300 bg-amber-500/20 hover:bg-amber-500/30'
-      : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800';
+      ? 'bg-[var(--accent-tint)] text-[var(--accent)] hover:bg-[rgba(229,169,40,0.22)]'
+      : 'text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--ink)]';
   }
 
   function roleBadgeClasses(role: TroopRole): string {
     switch (role) {
       case 'Main':
-        return 'bg-amber-500/15 text-amber-300 ring-amber-400/25';
+        return 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--accent)]';
       case 'Tank':
-        return 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/25';
+        return 'border-[var(--positive-border)] bg-[var(--positive-tint)] text-[var(--positive)]';
       case 'Support':
-        return 'bg-sky-500/15 text-sky-300 ring-sky-400/25';
+        return 'border-sky-400/35 bg-sky-400/10 text-sky-300';
       case 'Damage Dealer':
-        return 'bg-rose-500/15 text-rose-300 ring-rose-400/25';
+        return 'border-[var(--danger-border)] bg-[var(--danger-tint)] text-[#f29b9b]';
       case 'Funnel':
-        return 'bg-purple-500/15 text-purple-300 ring-purple-400/25';
+        return 'border-orange-400/35 bg-orange-400/10 text-orange-300';
       case 'Clean-up':
-        return 'bg-slate-700/60 text-slate-300 ring-slate-600/40';
+        return 'border-[var(--border-strong)] bg-[var(--surface-raised)] text-[var(--ink-secondary)]';
     }
   }
 
@@ -82,88 +72,99 @@
   }
 </script>
 
-<section
-  class="rounded-2xl border border-slate-800 bg-slate-900/85 p-4 shadow-xl backdrop-blur-sm sm:p-5"
->
+<section class="panel-surface p-4 sm:p-5">
   <!-- Header & Action Bar -->
-  <div class="mb-5 flex flex-col justify-between gap-3 border-b border-slate-800 pb-4 sm:flex-row sm:items-center">
-    <div class="flex items-center gap-2">
-      <h2 class="text-base font-extrabold text-white">Loadout</h2>
-      <span class="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-bold text-amber-300 ring-1 ring-amber-400/30">
-        TH{spinStore.townHall}
+  <div
+    class="mb-5 flex flex-col justify-between gap-3 border-b border-[var(--border)] pb-4 sm:flex-row sm:items-center"
+  >
+    <div class="flex flex-wrap items-center gap-2.5">
+      <h2 class="text-base font-bold text-[var(--ink)]">Loadout</h2>
+      <span
+        class="rounded-md border border-[var(--accent-border)] bg-[var(--accent-tint)] px-2 py-0.5 font-mono text-xs font-semibold text-[var(--accent)] tabular-nums"
+      >
+        TH {spinStore.townHall}
       </span>
-      <span class="text-xs text-slate-400">
-        {spinStore.totalPickedCount} terpilih
+      <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+        {spinStore.t.pickedCount(spinStore.totalPickedCount)}
       </span>
     </div>
 
-    <div class="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-72 lg:w-auto lg:grid-cols-4">
-      <button
-        type="button"
-        disabled={isEmpty}
-        onclick={handleCopyText}
-        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-700 bg-slate-800/90 px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-amber-400/60 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
-      >
-        {#if copied}
-          <Check class="h-3.5 w-3.5 shrink-0 text-emerald-400" />
-          Tersalin!
-        {:else}
-          <Copy class="h-3.5 w-3.5 shrink-0 text-amber-300" />
-          Copy Teks
-        {/if}
-      </button>
-
+    <div class="grid w-full shrink-0 grid-cols-2 gap-2 sm:w-auto sm:grid-cols-4">
       <button
         type="button"
         disabled={isEmpty || exporting}
         onclick={handleDownloadPng}
-        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-purple-500/50 bg-purple-600/20 px-3 py-2 text-xs font-semibold text-purple-100 transition-colors hover:bg-purple-600/35 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="btn-tactile inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Download class="h-3.5 w-3.5 shrink-0" />
-        {exporting ? 'Membuat PNG...' : 'Export PNG'}
+        <span>{exporting ? spinStore.t.generatingPng : 'Export PNG'}</span>
+      </button>
+
+      <button
+        type="button"
+        disabled={isEmpty}
+        onclick={handleCopyText}
+        class="btn-tactile inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:border-[var(--accent-border)] hover:bg-[var(--surface-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {#if copied}
+          <Check class="h-3.5 w-3.5 shrink-0 text-[var(--positive)]" />
+          <span>{spinStore.t.copied}</span>
+        {:else}
+          <Copy class="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
+          <span>{spinStore.t.copyText}</span>
+        {/if}
       </button>
 
       <button
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearUnlocked()}
-        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-700/80 bg-slate-950/70 px-3 py-2 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
-        title="Hapus semua slot yang tidak dikunci"
+        class="btn-tactile inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface-inset)] px-3 py-1.5 text-xs font-medium text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-40"
+        title={spinStore.t.clearUnlockedTitle}
       >
         <Eraser class="h-3.5 w-3.5 shrink-0" />
-        Clear Unlocked
+        <span>Clear Unlocked</span>
       </button>
 
       <button
         type="button"
         disabled={isEmpty || spinStore.isSpinning}
         onclick={() => spinStore.clearAll()}
-        class="inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-rose-500/35 bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-200 transition-colors hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-40 sm:py-1.5"
+        class="btn-tactile inline-flex min-h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[var(--danger-border)] bg-[var(--danger-tint)] px-3 py-1.5 text-xs font-medium text-[#f5b4b4] hover:bg-[rgba(226,93,93,0.2)] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Trash2 class="h-3.5 w-3.5 shrink-0" />
-        Clear All
+        <span>Clear All</span>
       </button>
     </div>
   </div>
 
   {#if isEmpty}
-    <div class="rounded-xl border border-dashed border-slate-800 bg-slate-950/50 px-4 py-8 text-center">
-      <p class="text-sm font-semibold text-slate-300">Belum ada unit terpilih</p>
-      <p class="mt-1 text-xs text-slate-500">Klik <strong class="text-amber-300">SPIN!</strong> untuk mulai.</p>
+    <div
+      class="rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--surface-inset)] px-4 py-9 text-center"
+    >
+      <p class="text-sm font-semibold text-[var(--ink)]">{spinStore.t.emptyLoadoutTitle}</p>
+      <p class="mt-1 text-xs text-[var(--muted)]">
+        {spinStore.t.emptyLoadoutBeforeSpin}
+        <strong class="font-semibold text-[var(--accent)]">SPIN</strong>
+        {spinStore.t.emptyLoadoutAfterSpin}
+      </p>
     </div>
   {:else}
     <div class="space-y-6">
       <!-- 1. Heroes, Equipment & Pets -->
       {#if spinStore.loadout.heroes.length > 0 || spinStore.loadout.unpairedEquipment.length > 0 || spinStore.loadout.unpairedPets.length > 0}
         <div>
-          <div class="mb-2.5 flex items-center justify-between">
-            <h3 class="text-xs font-bold tracking-wider text-amber-300 uppercase">
-              Heroes & Companions
-            </h3>
-            <span class="text-xs font-medium text-slate-400">
-              Heroes {spinStore.loadout.heroes.length}/{spinStore.filters.realisticLimits ? thConfig.maxActiveHeroes : '∞'}
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-xs font-semibold text-[var(--ink)]">Heroes & Companions</h3>
+            <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+              Heroes {spinStore.loadout.heroes.length}/{spinStore.filters.realisticLimits
+                ? thConfig.maxActiveHeroes
+                : '∞'}
               {#if thConfig.maxPets > 0}
-                • Pets {spinStore.loadout.heroes.filter((h) => h.pet).length + spinStore.loadout.unpairedPets.length}/{spinStore.filters.realisticLimits ? thConfig.maxPets : '∞'}
+                • Pets {spinStore.loadout.heroes.filter((h) => h.pet).length +
+                  spinStore.loadout.unpairedPets.length}/{spinStore.filters.realisticLimits
+                  ? thConfig.maxPets
+                  : '∞'}
               {/if}
             </span>
           </div>
@@ -174,18 +175,22 @@
                 {@const hero = getHeroById(slot.heroId)}
                 {#if hero}
                   <div
-                    class="flex flex-col justify-between rounded-xl border p-3.5 transition-colors {slot.locked
-                      ? 'border-amber-400/60 bg-amber-500/5'
-                      : 'border-slate-800 bg-slate-950/75'}"
+                    class="flex flex-col justify-between rounded-lg border p-3.5 transition-colors {slot.locked
+                      ? 'border-l-2 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)]'
+                      : 'border-[var(--border)] bg-[var(--surface-inset)]'}"
                   >
                     <!-- Hero Header Row -->
                     <div class="flex items-center justify-between gap-2">
                       <div class="flex min-w-0 items-center gap-2.5">
-                        <UnitIcon item={hero} size={42} class="border-amber-400/50" />
+                        <UnitIcon item={hero} size={42} class="border-[var(--accent-border)]" />
                         <div class="min-w-0">
-                          <div class="truncate text-sm font-bold text-white">{hero.name}</div>
-                          <div class="text-[11px] text-slate-400">
-                            Equip {slot.equipment.length}/2 {thConfig.maxPets > 0 ? `• ${slot.pet ? '1/1 Pet' : '0/1 Pet'}` : ''}
+                          <div class="truncate text-sm font-bold text-[var(--ink)]">
+                            {hero.name}
+                          </div>
+                          <div class="font-mono text-[11px] text-[var(--muted)] tabular-nums">
+                            Equip {slot.equipment.length}/2 {thConfig.maxPets > 0
+                              ? `• ${slot.pet ? '1/1 Pet' : '0/1 Pet'}`
+                              : ''}
                           </div>
                         </div>
                       </div>
@@ -195,8 +200,8 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => triggerRespin({ kind: 'hero', heroUid: slot.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300 disabled:opacity-40"
-                          title="Re-spin Hero ini"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)] disabled:opacity-40"
+                          title={spinStore.t.respinHeroTitle}
                           aria-label="Re-spin {hero.name}"
                         >
                           <RotateCw class="h-3.5 w-3.5" />
@@ -205,9 +210,13 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.toggleLock({ kind: 'hero', heroUid: slot.uid })}
-                          class="rounded-lg p-1.5 transition-colors disabled:opacity-40 {lockClasses(slot.locked)}"
-                          title={slot.locked ? 'Buka kunci Hero' : 'Kunci Hero'}
-                          aria-label="Kunci {hero.name}"
+                          class="icon-action cursor-pointer disabled:opacity-40 {lockClasses(
+                            slot.locked,
+                          )}"
+                          title={slot.locked
+                            ? spinStore.t.unlockHeroTitle
+                            : spinStore.t.lockHeroTitle}
+                          aria-label="{spinStore.t.lockTitle} {hero.name}"
                         >
                           {#if slot.locked}
                             <Lock class="h-3.5 w-3.5" />
@@ -219,9 +228,9 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.removeSlot({ kind: 'hero', heroUid: slot.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300 disabled:opacity-40"
-                          title="Hapus Hero ini"
-                          aria-label="Hapus {hero.name}"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)] disabled:opacity-40"
+                          title={spinStore.t.removeHeroTitle}
+                          aria-label="{spinStore.t.removeTitle} {hero.name}"
                         >
                           <X class="h-3.5 w-3.5" />
                         </button>
@@ -229,7 +238,7 @@
                     </div>
 
                     <!-- Aligned Sub-grid: 2-col Equipment + full-width Pet -->
-                    <div class="mt-3 space-y-2 border-t border-slate-800/80 pt-2.5">
+                    <div class="mt-3 space-y-2 border-t border-[var(--border)] pt-2.5">
                       {#if thConfig.blacksmithUnlocked || slot.equipment.length > 0}
                         <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           {#each slot.equipment as eq (eq.uid)}
@@ -237,12 +246,14 @@
                             {#if eqItem}
                               <div
                                 class="flex w-full min-w-0 items-center justify-between gap-1.5 rounded-lg border px-2 py-1.5 text-xs {eq.locked
-                                  ? 'border-amber-400/50 bg-amber-500/10 text-amber-100'
-                                  : 'border-slate-800 bg-slate-900/90 text-slate-200'}"
+                                  ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+                                  : 'border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)]'}"
                               >
                                 <div class="flex min-w-0 items-center gap-1.5">
                                   <UnitIcon item={eqItem} size={22} />
-                                  <span class="truncate font-medium" title={eqItem.name}>{eqItem.name}</span>
+                                  <span class="truncate font-medium" title={eqItem.name}>
+                                    {eqItem.name}
+                                  </span>
                                 </div>
                                 <div class="flex shrink-0 items-center gap-0.5">
                                   <button
@@ -254,8 +265,8 @@
                                         heroUid: slot.uid,
                                         equipUid: eq.uid,
                                       })}
-                                    class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300 disabled:opacity-40"
-                                    title="Re-spin equipment ini"
+                                    class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)] disabled:opacity-40"
+                                    title={spinStore.t.respinEquipTitle}
                                     aria-label="Re-spin {eqItem.name}"
                                   >
                                     <RotateCw class="h-3 w-3" />
@@ -269,9 +280,13 @@
                                         heroUid: slot.uid,
                                         equipUid: eq.uid,
                                       })}
-                                    class="rounded p-1 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-slate-200'}"
-                                    title={eq.locked ? 'Buka kunci' : 'Kunci equipment'}
-                                    aria-label="Kunci {eqItem.name}"
+                                    class="icon-action cursor-pointer disabled:opacity-40 {lockClasses(
+                                      eq.locked,
+                                    )}"
+                                    title={eq.locked
+                                      ? spinStore.t.unlockTitle
+                                      : spinStore.t.lockEquipTitle}
+                                    aria-label="{spinStore.t.lockTitle} {eqItem.name}"
                                   >
                                     {#if eq.locked}
                                       <Lock class="h-3 w-3" />
@@ -288,9 +303,9 @@
                                         heroUid: slot.uid,
                                         equipUid: eq.uid,
                                       })}
-                                    class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
-                                    title="Hapus equipment"
-                                    aria-label="Hapus {eqItem.name}"
+                                    class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                                    title={spinStore.t.removeEquipTitle}
+                                    aria-label="{spinStore.t.removeTitle} {eqItem.name}"
                                   >
                                     <X class="h-3 w-3" />
                                   </button>
@@ -300,14 +315,14 @@
                           {/each}
 
                           {#if thConfig.blacksmithUnlocked && slot.equipment.length < 2}
-                            {#each Array.from({ length: 2 - slot.equipment.length }) as _}
+                            {#each Array.from({ length: 2 - slot.equipment.length }, (_, idx) => idx) as emptyIdx (emptyIdx)}
                               <button
                                 type="button"
                                 disabled={spinStore.isSpinning}
                                 onclick={() => spinStore.setCategory('equipment')}
-                                class="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-700/80 px-2.5 py-2 text-[11px] font-medium text-slate-500 transition-colors hover:border-purple-400/60 hover:text-purple-300"
+                                class="flex min-h-9 w-full cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent-border)] hover:text-[var(--accent)] disabled:opacity-40"
                               >
-                                + Slot Equip
+                                {spinStore.t.addEquipSlot}
                               </button>
                             {/each}
                           {/if}
@@ -319,14 +334,19 @@
                           {@const petItem = getItemById(slot.pet.itemId)}
                           {#if petItem}
                             <div
-                              class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {slot.pet.locked
-                                ? 'border-amber-400/50 bg-amber-500/10 text-amber-100'
-                                : 'border-emerald-700/50 bg-emerald-950/35 text-emerald-100'}"
+                              class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {slot
+                                .pet.locked
+                                ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+                                : 'border-[var(--positive-border)] bg-[var(--positive-tint)] text-[var(--ink)]'}"
                             >
                               <div class="flex min-w-0 items-center gap-2">
                                 <UnitIcon item={petItem} size={22} />
-                                <span class="truncate font-semibold" title={petItem.name}>{petItem.name}</span>
-                                <span class="shrink-0 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                                <span class="truncate font-semibold" title={petItem.name}>
+                                  {petItem.name}
+                                </span>
+                                <span
+                                  class="shrink-0 rounded border border-[var(--positive-border)] bg-[var(--surface-inset)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--positive)]"
+                                >
                                   Pet
                                 </span>
                               </div>
@@ -334,9 +354,10 @@
                                 <button
                                   type="button"
                                   disabled={spinStore.isSpinning}
-                                  onclick={() => triggerRespin({ kind: 'pairedPet', heroUid: slot.uid })}
-                                  class="rounded p-1 text-emerald-300/75 hover:bg-emerald-900/50 hover:text-amber-300"
-                                  title="Re-spin Pet ini"
+                                  onclick={() =>
+                                    triggerRespin({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="icon-action cursor-pointer text-[var(--ink-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
+                                  title={spinStore.t.respinPetTitle}
                                   aria-label="Re-spin {petItem.name}"
                                 >
                                   <RotateCw class="h-3 w-3" />
@@ -344,10 +365,13 @@
                                 <button
                                   type="button"
                                   disabled={spinStore.isSpinning}
-                                  onclick={() => spinStore.toggleLock({ kind: 'pairedPet', heroUid: slot.uid })}
-                                  class="rounded p-1 {slot.pet.locked ? 'text-amber-300' : 'text-emerald-300/65 hover:bg-emerald-900/50 hover:text-white'}"
-                                  title={slot.pet.locked ? 'Buka kunci Pet' : 'Kunci Pet'}
-                                  aria-label="Kunci {petItem.name}"
+                                  onclick={() =>
+                                    spinStore.toggleLock({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="icon-action cursor-pointer {lockClasses(slot.pet.locked)}"
+                                  title={slot.pet.locked
+                                    ? spinStore.t.unlockPetTitle
+                                    : spinStore.t.lockPetTitle}
+                                  aria-label="{spinStore.t.lockTitle} {petItem.name}"
                                 >
                                   {#if slot.pet.locked}
                                     <Lock class="h-3 w-3" />
@@ -358,10 +382,11 @@
                                 <button
                                   type="button"
                                   disabled={spinStore.isSpinning}
-                                  onclick={() => spinStore.removeSlot({ kind: 'pairedPet', heroUid: slot.uid })}
-                                  class="rounded p-1 text-emerald-300/65 hover:bg-rose-500/20 hover:text-rose-300"
-                                  title="Hapus Pet"
-                                  aria-label="Hapus {petItem.name}"
+                                  onclick={() =>
+                                    spinStore.removeSlot({ kind: 'pairedPet', heroUid: slot.uid })}
+                                  class="icon-action cursor-pointer text-[var(--ink-secondary)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                                  title={spinStore.t.removePetTitle}
+                                  aria-label="{spinStore.t.removeTitle} {petItem.name}"
                                 >
                                   <X class="h-3 w-3" />
                                 </button>
@@ -373,9 +398,9 @@
                             type="button"
                             disabled={spinStore.isSpinning}
                             onclick={() => spinStore.setCategory('pets')}
-                            class="flex w-full items-center justify-center rounded-lg border border-dashed border-emerald-800/70 px-2.5 py-1.5 text-[11px] font-medium text-emerald-500/80 transition-colors hover:border-emerald-400/60 hover:text-emerald-300"
+                            class="flex min-h-9 w-full cursor-pointer items-center justify-center rounded-lg border border-dashed border-[var(--border-strong)] px-2.5 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:border-[var(--positive-border)] hover:text-[var(--positive)] disabled:opacity-40"
                           >
-                            + Slot Pet
+                            {spinStore.t.addPetSlot}
                           </button>
                         {/if}
                       {/if}
@@ -388,9 +413,11 @@
 
           <!-- Unpaired Equipment Holding Row -->
           {#if spinStore.loadout.unpairedEquipment.length > 0}
-            <div class="mt-3 rounded-xl border border-purple-500/30 bg-purple-500/5 p-3">
-              <div class="mb-2 text-[11px] font-bold tracking-wide text-purple-300 uppercase">
-                Equipment Cadangan
+            <div
+              class="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-3"
+            >
+              <div class="mb-2 text-xs font-semibold text-[var(--ink-secondary)]">
+                {spinStore.t.reserveEquipment}
               </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedEquipment as eq (eq.uid)}
@@ -398,14 +425,14 @@
                   {#if eqItem}
                     <div
                       class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {eq.locked
-                        ? 'border-amber-400/60 bg-amber-500/10 text-amber-100'
-                        : 'border-slate-700 bg-slate-900 text-slate-200'}"
+                        ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+                        : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--ink)]'}"
                     >
                       <div class="flex min-w-0 items-center gap-2">
                         <UnitIcon item={eqItem} size={24} />
                         <div class="min-w-0 leading-tight">
                           <div class="truncate font-semibold">{eqItem.name}</div>
-                          <div class="truncate text-[10px] text-purple-300">
+                          <div class="truncate text-[11px] text-[var(--muted)]">
                             {getHeroById(eq.heroId)?.name ?? eq.heroId}
                           </div>
                         </div>
@@ -414,8 +441,9 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => triggerRespin({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                          class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300"
+                          onclick={() =>
+                            triggerRespin({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                           title="Re-spin"
                           aria-label="Re-spin {eqItem.name}"
                         >
@@ -424,10 +452,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.toggleLock({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                          class="rounded p-1 {eq.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}"
-                          title="Kunci"
-                          aria-label="Kunci {eqItem.name}"
+                          onclick={() =>
+                            spinStore.toggleLock({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="icon-action cursor-pointer {lockClasses(eq.locked)}"
+                          title={spinStore.t.lockTitle}
+                          aria-label="{spinStore.t.lockTitle} {eqItem.name}"
                         >
                           {#if eq.locked}
                             <Lock class="h-3 w-3" />
@@ -438,10 +467,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.removeSlot({ kind: 'unpairedEquipment', equipUid: eq.uid })}
-                          class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
-                          title="Hapus"
-                          aria-label="Hapus {eqItem.name}"
+                          onclick={() =>
+                            spinStore.removeSlot({ kind: 'unpairedEquipment', equipUid: eq.uid })}
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                          title={spinStore.t.removeTitle}
+                          aria-label="{spinStore.t.removeTitle} {eqItem.name}"
                         >
                           <X class="h-3 w-3" />
                         </button>
@@ -455,9 +485,11 @@
 
           <!-- Unpaired Pets Holding Row -->
           {#if spinStore.loadout.unpairedPets.length > 0}
-            <div class="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
-              <div class="mb-2 text-[11px] font-bold tracking-wide text-emerald-300 uppercase">
-                Pets Cadangan
+            <div
+              class="mt-3 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] p-3"
+            >
+              <div class="mb-2 text-xs font-semibold text-[var(--ink-secondary)]">
+                {spinStore.t.reservePets}
               </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {#each spinStore.loadout.unpairedPets as pet (pet.uid)}
@@ -465,8 +497,8 @@
                   {#if petItem}
                     <div
                       class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs {pet.locked
-                        ? 'border-amber-400/60 bg-amber-500/10 text-amber-100'
-                        : 'border-emerald-800/80 bg-slate-900 text-emerald-100'}"
+                        ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+                        : 'border-[var(--positive-border)] bg-[var(--surface-inset)] text-[var(--ink)]'}"
                     >
                       <div class="flex min-w-0 items-center gap-2">
                         <UnitIcon item={petItem} size={24} />
@@ -477,7 +509,7 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => triggerRespin({ kind: 'unpairedPet', petUid: pet.uid })}
-                          class="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-amber-300"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                           title="Re-spin"
                           aria-label="Re-spin {petItem.name}"
                         >
@@ -486,10 +518,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.toggleLock({ kind: 'unpairedPet', petUid: pet.uid })}
-                          class="rounded p-1 {pet.locked ? 'text-amber-300' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}"
-                          title="Kunci"
-                          aria-label="Kunci {petItem.name}"
+                          onclick={() =>
+                            spinStore.toggleLock({ kind: 'unpairedPet', petUid: pet.uid })}
+                          class="icon-action cursor-pointer {lockClasses(pet.locked)}"
+                          title={spinStore.t.lockTitle}
+                          aria-label="{spinStore.t.lockTitle} {petItem.name}"
                         >
                           {#if pet.locked}
                             <Lock class="h-3 w-3" />
@@ -500,10 +533,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.removeSlot({ kind: 'unpairedPet', petUid: pet.uid })}
-                          class="rounded p-1 text-slate-500 hover:bg-rose-500/20 hover:text-rose-300"
-                          title="Hapus"
-                          aria-label="Hapus {petItem.name}"
+                          onclick={() =>
+                            spinStore.removeSlot({ kind: 'unpairedPet', petUid: pet.uid })}
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                          title={spinStore.t.removeTitle}
+                          aria-label="{spinStore.t.removeTitle} {petItem.name}"
                         >
                           <X class="h-3 w-3" />
                         </button>
@@ -517,32 +551,40 @@
         </div>
       {/if}
 
-      <!-- 2. Troops (Clean Uniform Grid with 1 Most Relevant Role) -->
+      <!-- 2. Troops -->
       {#if spinStore.loadout.troops.length > 0}
         <div>
-          <h3 class="mb-2.5 text-xs font-bold tracking-wider text-slate-300 uppercase">
-            Troops ({spinStore.loadout.troops.length})
-          </h3>
+          <div class="mb-2.5 flex items-center justify-between">
+            <h3 class="text-xs font-semibold text-[var(--ink)]">Troops</h3>
+            <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+              {spinStore.loadout.troops.length}
+            </span>
+          </div>
           <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {#each spinStore.loadout.troops as entry (entry.uid)}
               {@const item = getItemById(entry.itemId) as TroopItem | undefined}
               {#if item}
                 {@const primaryRole = getPrimaryDisplayRole(item.roles, spinStore.filters.roles)}
                 <div
-                  class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 transition-colors {entry.locked
-                    ? 'border-amber-400/60 bg-amber-500/10'
-                    : 'border-slate-800 bg-slate-950/80'}"
+                  class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors {entry.locked
+                    ? 'border-l-2 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)]'
+                    : 'border-[var(--border)] bg-[var(--surface-inset)]'}"
                 >
                   <div class="flex min-w-0 items-center gap-2.5">
                     <UnitIcon {item} size={34} />
                     <div class="min-w-0 leading-tight">
-                      <div class="truncate text-xs font-bold text-white" title={item.name}>
+                      <div
+                        class="truncate text-xs font-semibold text-[var(--ink)]"
+                        title={item.name}
+                      >
                         {item.name}
                       </div>
                       <div class="mt-1 flex items-center gap-1">
                         <span
-                          title="Semua role: {item.roles.join(', ')}"
-                          class="inline-flex w-24 items-center justify-center whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                          title={spinStore.t.allRolesTitle(item.roles.join(', '))}
+                          class="inline-flex min-w-[5.75rem] items-center justify-center rounded border px-1.5 py-0.5 text-[11px] font-medium {roleBadgeClasses(
+                            primaryRole,
+                          )}"
                         >
                           {primaryRole}
                         </span>
@@ -554,7 +596,7 @@
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => triggerRespin({ kind: 'troop', uid: entry.uid })}
-                      class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                      class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                       title="Re-spin"
                       aria-label="Re-spin {item.name}"
                     >
@@ -564,9 +606,9 @@
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => spinStore.toggleLock({ kind: 'troop', uid: entry.uid })}
-                      class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
-                      title="Kunci"
-                      aria-label="Kunci {item.name}"
+                      class="icon-action cursor-pointer {lockClasses(entry.locked)}"
+                      title={spinStore.t.lockTitle}
+                      aria-label="{spinStore.t.lockTitle} {item.name}"
                     >
                       {#if entry.locked}
                         <Lock class="h-3.5 w-3.5" />
@@ -578,9 +620,9 @@
                       type="button"
                       disabled={spinStore.isSpinning}
                       onclick={() => spinStore.removeSlot({ kind: 'troop', uid: entry.uid })}
-                      class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
-                      title="Hapus"
-                      aria-label="Hapus {item.name}"
+                      class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                      title={spinStore.t.removeTitle}
+                      aria-label="{spinStore.t.removeTitle} {item.name}"
                     >
                       <X class="h-3.5 w-3.5" />
                     </button>
@@ -592,34 +634,47 @@
         </div>
       {/if}
 
-      <!-- 3. Super Troops, Spells & Siege (Uniform Full-Width Cards per Column) -->
+      <!-- 3. Super Troops, Spells & Siege -->
       {#if spinStore.loadout.superTroops.length > 0 || spinStore.loadout.spells.length > 0 || spinStore.loadout.siegeMachines.length > 0}
         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
           {#if spinStore.loadout.superTroops.length > 0}
             <div>
-              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-fuchsia-300 uppercase">
-                Super Troops ({spinStore.loadout.superTroops.length}/{spinStore.filters.realisticLimits ? thConfig.maxSuperTroops : '∞'})
-              </h3>
+              <div class="mb-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-semibold text-[var(--ink)]">Super Troops</h3>
+                <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+                  {spinStore.loadout.superTroops.length}/{spinStore.filters.realisticLimits
+                    ? thConfig.maxSuperTroops
+                    : '∞'}
+                </span>
+              </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.superTroops as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId) as SuperTroopItem | undefined}
                   {#if item}
-                    {@const primaryRole = getPrimaryDisplayRole(item.roles, spinStore.filters.roles)}
+                    {@const primaryRole = getPrimaryDisplayRole(
+                      item.roles,
+                      spinStore.filters.roles,
+                    )}
                     <div
-                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
-                        ? 'border-amber-400/60 bg-amber-500/10'
-                        : 'border-fuchsia-800/50 bg-fuchsia-950/20'}"
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors {entry.locked
+                        ? 'border-l-2 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)]'
+                        : 'border-[var(--border)] bg-[var(--surface-inset)]'}"
                     >
                       <div class="flex min-w-0 items-center gap-2.5">
                         <UnitIcon {item} size={32} />
                         <div class="min-w-0 leading-tight">
-                          <div class="truncate text-xs font-bold text-white" title={item.name}>
+                          <div
+                            class="truncate text-xs font-semibold text-[var(--ink)]"
+                            title={item.name}
+                          >
                             {item.name}
                           </div>
                           <div class="mt-1">
                             <span
-                              title="Semua role: {item.roles.join(', ')}"
-                              class="inline-flex w-24 items-center justify-center whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-semibold ring-1 {roleBadgeClasses(primaryRole)}"
+                              title={spinStore.t.allRolesTitle(item.roles.join(', '))}
+                              class="inline-flex min-w-[5.75rem] items-center justify-center rounded border px-1.5 py-0.5 text-[11px] font-medium {roleBadgeClasses(
+                                primaryRole,
+                              )}"
                             >
                               {primaryRole}
                             </span>
@@ -631,7 +686,7 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => triggerRespin({ kind: 'superTroop', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                           title="Re-spin"
                           aria-label="Re-spin {item.name}"
                         >
@@ -640,10 +695,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.toggleLock({ kind: 'superTroop', uid: entry.uid })}
-                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
-                          title="Kunci"
-                          aria-label="Kunci {item.name}"
+                          onclick={() =>
+                            spinStore.toggleLock({ kind: 'superTroop', uid: entry.uid })}
+                          class="icon-action cursor-pointer {lockClasses(entry.locked)}"
+                          title={spinStore.t.lockTitle}
+                          aria-label="{spinStore.t.lockTitle} {item.name}"
                         >
                           {#if entry.locked}
                             <Lock class="h-3.5 w-3.5" />
@@ -654,10 +710,11 @@
                         <button
                           type="button"
                           disabled={spinStore.isSpinning}
-                          onclick={() => spinStore.removeSlot({ kind: 'superTroop', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
-                          title="Hapus"
-                          aria-label="Hapus {item.name}"
+                          onclick={() =>
+                            spinStore.removeSlot({ kind: 'superTroop', uid: entry.uid })}
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                          title={spinStore.t.removeTitle}
+                          aria-label="{spinStore.t.removeTitle} {item.name}"
                         >
                           <X class="h-3.5 w-3.5" />
                         </button>
@@ -671,21 +728,27 @@
 
           {#if spinStore.loadout.spells.length > 0}
             <div>
-              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-sky-300 uppercase">
-                Spells ({spinStore.loadout.spells.length})
-              </h3>
+              <div class="mb-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-semibold text-[var(--ink)]">Spells</h3>
+                <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+                  {spinStore.loadout.spells.length}
+                </span>
+              </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.spells as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId)}
                   {#if item}
                     <div
-                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
-                        ? 'border-amber-400/60 bg-amber-500/10'
-                        : 'border-sky-900/60 bg-slate-950/80'}"
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors {entry.locked
+                        ? 'border-l-2 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)]'
+                        : 'border-[var(--border)] bg-[var(--surface-inset)]'}"
                     >
                       <div class="flex min-w-0 items-center gap-2.5">
                         <UnitIcon {item} size={32} />
-                        <span class="truncate text-xs font-bold text-white" title={item.name}>
+                        <span
+                          class="truncate text-xs font-semibold text-[var(--ink)]"
+                          title={item.name}
+                        >
                           {item.name}
                         </span>
                       </div>
@@ -694,7 +757,7 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => triggerRespin({ kind: 'spell', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                           title="Re-spin"
                           aria-label="Re-spin {item.name}"
                         >
@@ -704,9 +767,9 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.toggleLock({ kind: 'spell', uid: entry.uid })}
-                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
-                          title="Kunci"
-                          aria-label="Kunci {item.name}"
+                          class="icon-action cursor-pointer {lockClasses(entry.locked)}"
+                          title={spinStore.t.lockTitle}
+                          aria-label="{spinStore.t.lockTitle} {item.name}"
                         >
                           {#if entry.locked}
                             <Lock class="h-3.5 w-3.5" />
@@ -718,9 +781,9 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.removeSlot({ kind: 'spell', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
-                          title="Hapus"
-                          aria-label="Hapus {item.name}"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                          title={spinStore.t.removeTitle}
+                          aria-label="{spinStore.t.removeTitle} {item.name}"
                         >
                           <X class="h-3.5 w-3.5" />
                         </button>
@@ -734,21 +797,29 @@
 
           {#if spinStore.loadout.siegeMachines.length > 0}
             <div>
-              <h3 class="mb-2.5 text-xs font-bold tracking-wider text-rose-300 uppercase">
-                Siege Machine ({spinStore.loadout.siegeMachines.length}/{spinStore.filters.realisticLimits ? thConfig.maxSiege : '∞'})
-              </h3>
+              <div class="mb-2.5 flex items-center justify-between">
+                <h3 class="text-xs font-semibold text-[var(--ink)]">Siege Machine</h3>
+                <span class="font-mono text-xs text-[var(--muted)] tabular-nums">
+                  {spinStore.loadout.siegeMachines.length}/{spinStore.filters.realisticLimits
+                    ? thConfig.maxSiege
+                    : '∞'}
+                </span>
+              </div>
               <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
                 {#each spinStore.loadout.siegeMachines as entry (entry.uid)}
                   {@const item = getItemById(entry.itemId)}
                   {#if item}
                     <div
-                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border px-3 py-2 {entry.locked
-                        ? 'border-amber-400/60 bg-amber-500/10'
-                        : 'border-rose-900/60 bg-slate-950/80'}"
+                      class="flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-colors {entry.locked
+                        ? 'border-l-2 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)]'
+                        : 'border-[var(--border)] bg-[var(--surface-inset)]'}"
                     >
                       <div class="flex min-w-0 items-center gap-2.5">
                         <UnitIcon {item} size={32} />
-                        <span class="truncate text-xs font-bold text-white" title={item.name}>
+                        <span
+                          class="truncate text-xs font-semibold text-[var(--ink)]"
+                          title={item.name}
+                        >
                           {item.name}
                         </span>
                       </div>
@@ -757,7 +828,7 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => triggerRespin({ kind: 'siege', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-amber-300"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
                           title="Re-spin"
                           aria-label="Re-spin {item.name}"
                         >
@@ -767,9 +838,9 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.toggleLock({ kind: 'siege', uid: entry.uid })}
-                          class="rounded-lg p-1.5 transition-colors {lockClasses(entry.locked)}"
-                          title="Kunci"
-                          aria-label="Kunci {item.name}"
+                          class="icon-action cursor-pointer {lockClasses(entry.locked)}"
+                          title={spinStore.t.lockTitle}
+                          aria-label="{spinStore.t.lockTitle} {item.name}"
                         >
                           {#if entry.locked}
                             <Lock class="h-3.5 w-3.5" />
@@ -781,9 +852,9 @@
                           type="button"
                           disabled={spinStore.isSpinning}
                           onclick={() => spinStore.removeSlot({ kind: 'siege', uid: entry.uid })}
-                          class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-rose-500/20 hover:text-rose-300"
-                          title="Hapus"
-                          aria-label="Hapus {item.name}"
+                          class="icon-action cursor-pointer text-[var(--muted)] hover:bg-[var(--danger-tint)] hover:text-[var(--danger)]"
+                          title={spinStore.t.removeTitle}
+                          aria-label="{spinStore.t.removeTitle} {item.name}"
                         >
                           <X class="h-3.5 w-3.5" />
                         </button>
@@ -800,4 +871,8 @@
   {/if}
 </section>
 
-<ExportCard loadout={spinStore.loadout} townHall={spinStore.townHall} bind:cardRef={exportCardRef} />
+<ExportCard
+  loadout={spinStore.loadout}
+  townHall={spinStore.townHall}
+  bind:cardRef={exportCardRef}
+/>

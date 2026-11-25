@@ -20,7 +20,7 @@
 </script>
 
 <div
-  class="relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-700/80 bg-slate-900/90 shadow-inner {className}"
+  class="relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface-inset)] {className}"
   style:width="{size}px"
   style:height="{size}px"
 >
@@ -41,6 +41,7 @@
       viewBox="0 0 40 40"
       width={size}
       height={size}
+      role="img"
       aria-label={item.name}
       class="h-full w-full"
     >

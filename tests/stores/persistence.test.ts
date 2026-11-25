@@ -20,6 +20,7 @@ describe('persistence', () => {
   it('round-trips valid persisted state cleanly', () => {
     const storage = makeMemoryStorage();
     const state = createDefaultPersistedState();
+    state.locale = 'en';
     state.townHall = 15;
     state.activeCategory = 'heroes';
     state.fastSpin = true;
@@ -34,6 +35,7 @@ describe('persistence', () => {
     savePersistedState(state, storage);
     const loaded = loadPersistedState(storage);
 
+    expect(loaded.locale).toBe('en');
     expect(loaded.townHall).toBe(15);
     expect(loaded.activeCategory).toBe('heroes');
     expect(loaded.fastSpin).toBe(true);

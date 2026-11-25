@@ -1,8 +1,4 @@
-import {
-  getAvailableCategories,
-  getHeroById,
-  getItemById,
-} from '../data';
+import { getAvailableCategories, getHeroById, getItemById } from '../data';
 import type {
   CategoryId,
   FilterState,
@@ -25,19 +21,17 @@ import {
 } from '../engine/loadoutRules';
 import { computeEligiblePool, type PoolFilterResult } from '../engine/poolFilter';
 import { spinAudio } from '../utils/audio';
-import {
-  createDefaultFilters,
-  loadPersistedState,
-  savePersistedState,
-} from './persistence';
+import { TRANSLATIONS, type Locale, type Translations } from '../utils/i18n';
+import { createDefaultFilters, loadPersistedState, savePersistedState } from './persistence';
 
-export interface RevealRecord {
+interface RevealRecord {
   item: SpinItem;
   replacedItemName?: string;
   slotTarget?: SlotTarget;
 }
 
 class SpinStore {
+  locale = $state<Locale>('id');
   townHall = $state<number>(19);
   activeCategory = $state<CategoryId>('troops');
   filters = $state<FilterState>(createDefaultFilters());
@@ -45,6 +39,8 @@ class SpinStore {
   fastSpin = $state<boolean>(false);
   soundEnabled = $state<boolean>(true);
   soundVolume = $state<number>(0.5);
+
+  t = $derived<Translations>(TRANSLATIONS[this.locale]);
 
   isSpinning = $state<boolean>(false);
   replaceTarget = $state<ReplaceTarget | null>(null);
@@ -80,6 +76,7 @@ class SpinStore {
 
   constructor() {
     const initial = loadPersistedState();
+    this.locale = initial.locale;
     this.townHall = initial.townHall;
     this.activeCategory = initial.activeCategory;
     this.filters = initial.filters;
@@ -89,11 +86,26 @@ class SpinStore {
     this.soundVolume = initial.soundVolume;
     spinAudio.setEnabled(this.soundEnabled);
     spinAudio.setVolume(this.soundVolume);
+    this.syncDocumentLang();
+  }
+
+  private syncDocumentLang(): void {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = this.locale;
+    }
+  }
+
+  setLocale(nextLocale: Locale): void {
+    if (this.locale === nextLocale) return;
+    this.locale = nextLocale;
+    this.syncDocumentLang();
+    this.persist();
   }
 
   private persist(): void {
     savePersistedState({
       version: 1,
+      locale: this.locale,
       townHall: this.townHall,
       activeCategory: this.activeCategory,
       filters: this.filters,
@@ -138,15 +150,18 @@ class SpinStore {
         this.filters.realisticLimits,
       );
       this.loadout = loadout;
-      if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+      if (
+        this.lastReveal?.slotTarget &&
+        !slotTargetExists(this.loadout, this.lastReveal.slotTarget)
+      ) {
         this.lastReveal = null;
       }
       if (removedNames.length > 0) {
         const preview =
           removedNames.length <= 4
             ? removedNames.join(', ')
-            : `${removedNames.slice(0, 4).join(', ')} (+${removedNames.length - 4} lainnya)`;
-        this.showToast(`TH diturunkan ke TH${clamped} — dihapus: ${preview}`, 5000);
+            : `${removedNames.slice(0, 4).join(', ')} ${this.t.toastMoreItems(removedNames.length - 4)}`;
+        this.showToast(this.t.toastThLowered(clamped, preview), 5000);
       }
     }
 
@@ -170,9 +185,7 @@ class SpinStore {
     const exists = this.filters.roles.includes(role);
     this.filters = {
       ...this.filters,
-      roles: exists
-        ? this.filters.roles.filter((r) => r !== role)
-        : [...this.filters.roles, role],
+      roles: exists ? this.filters.roles.filter((r) => r !== role) : [...this.filters.roles, role],
     };
     this.persist();
   }
@@ -212,11 +225,14 @@ class SpinStore {
       this.filters.realisticLimits,
     );
     this.loadout = loadout;
-    if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+    if (
+      this.lastReveal?.slotTarget &&
+      !slotTargetExists(this.loadout, this.lastReveal.slotTarget)
+    ) {
       this.lastReveal = null;
     }
     if (removedNames.length > 0) {
-      this.showToast(`Siege Workshop saja — dihapus: ${removedNames.join(', ')}`);
+      this.showToast(this.t.toastWorkshopOnly(removedNames.join(', ')));
     }
 
     const available = getAvailableCategories(this.townHall, nextInclude);
@@ -344,7 +360,7 @@ class SpinStore {
     // Verify there is at least 1 candidate before triggering wheel animation
     if (this.poolResult.items.length === 0) {
       this.replaceTarget = null;
-      this.showToast('Tidak ada kandidat lain yang tersedia untuk di-re-spin pada slot ini.');
+      this.showToast(this.t.toastNoRespinCandidate);
       return;
     }
 
@@ -459,7 +475,10 @@ class SpinStore {
     if (this.isSpinning) return;
     this.loadout = removeLoadoutItem(this.loadout, target);
     this.replaceTarget = null;
-    if (this.lastReveal?.slotTarget && !slotTargetExists(this.loadout, this.lastReveal.slotTarget)) {
+    if (
+      this.lastReveal?.slotTarget &&
+      !slotTargetExists(this.loadout, this.lastReveal.slotTarget)
+    ) {
       this.lastReveal = null;
     }
     this.persist();

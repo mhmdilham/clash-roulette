@@ -1,8 +1,4 @@
-import {
-  getItemById,
-  getTownHallConfig,
-  isItemUnlockedAtTh,
-} from '../data';
+import { getItemById, getTownHallConfig, isItemUnlockedAtTh } from '../data';
 import type {
   ArmyEntry,
   EquipmentEntry,
@@ -403,10 +399,7 @@ export function clearUnlockedLoadout(loadout: LoadoutState): LoadoutState {
   }
 
   next.heroes = keptHeroes;
-  next.unpairedEquipment = [
-    ...next.unpairedEquipment.filter((e) => e.locked),
-    ...detachedLockedEq,
-  ];
+  next.unpairedEquipment = [...next.unpairedEquipment.filter((e) => e.locked), ...detachedLockedEq];
   next.unpairedPets = [...next.unpairedPets.filter((p) => p.locked), ...detachedLockedPets];
   next.troops = next.troops.filter((t) => t.locked);
   next.superTroops = next.superTroops.filter((t) => t.locked);
@@ -454,7 +447,8 @@ export function pruneLoadoutForTownHall(
 
   const maxHeroes = enforceCaps ? thConfig.maxActiveHeroes : Infinity;
   const maxPets = thConfig.maxPets === 0 ? 0 : enforceCaps ? thConfig.maxPets : Infinity;
-  const maxSuper = thConfig.maxSuperTroops === 0 ? 0 : enforceCaps ? thConfig.maxSuperTroops : Infinity;
+  const maxSuper =
+    thConfig.maxSuperTroops === 0 ? 0 : enforceCaps ? thConfig.maxSuperTroops : Infinity;
   const maxSiege = thConfig.maxSiege === 0 ? 0 : enforceCaps ? thConfig.maxSiege : Infinity;
 
   const isUnlocked = (itemId: string): boolean => {
@@ -524,7 +518,10 @@ export function pruneLoadoutForTownHall(
   // 3. Prune unpaired pets & enforce total maxPets cap
   const pairedPetCount = next.heroes.filter((h) => h.pet !== null).length;
   let totalPets = pairedPetCount;
-  const candidateUnpairedPets = [...next.unpairedPets, ...loadout.unpairedPets.map((p) => ({ ...p }))];
+  const candidateUnpairedPets = [
+    ...next.unpairedPets,
+    ...loadout.unpairedPets.map((p) => ({ ...p })),
+  ];
   next.unpairedPets = [];
 
   for (const pet of candidateUnpairedPets) {

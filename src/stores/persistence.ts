@@ -20,11 +20,14 @@ import type {
   TroopRole,
 } from '../data/types';
 import { createEmptyLoadout, pruneLoadoutForTownHall } from '../engine/loadoutRules';
+import type { Locale } from '../utils/i18n';
 
-export const STORAGE_KEY = 'coc-attack-spin:v1';
+export const STORAGE_KEY = 'clash-roulette:v1';
+const LEGACY_STORAGE_KEY = 'coc-attack-spin:v1';
 
 export interface PersistedState {
   version: 1;
+  locale: Locale;
   townHall: number;
   activeCategory: CategoryId;
   filters: FilterState;
@@ -52,6 +55,7 @@ export function createDefaultFilters(): FilterState {
 export function createDefaultPersistedState(): PersistedState {
   return {
     version: 1,
+    locale: 'id',
     townHall: MAX_TOWN_HALL,
     activeCategory: 'troops',
     filters: createDefaultFilters(),
@@ -73,7 +77,7 @@ function ensureUniqueUid(rawUid: unknown, prefix: string, seenUids: Set<string>)
     seenUids.add(candidate);
     return candidate;
   }
-  let generated = '';
+  let generated: string;
   do {
     sanitizeUidSeq += 1;
     generated = `${prefix}-s-${sanitizeUidSeq.toString(36)}`;
@@ -198,9 +202,12 @@ function sanitizeFilters(raw: unknown): FilterState {
     roles,
     matchMode,
     movement,
-    includeCcSiege: typeof raw.includeCcSiege === 'boolean' ? raw.includeCcSiege : defaults.includeCcSiege,
-    realisticLimits: typeof raw.realisticLimits === 'boolean' ? raw.realisticLimits : defaults.realisticLimits,
-    antiDuplicate: typeof raw.antiDuplicate === 'boolean' ? raw.antiDuplicate : defaults.antiDuplicate,
+    includeCcSiege:
+      typeof raw.includeCcSiege === 'boolean' ? raw.includeCcSiege : defaults.includeCcSiege,
+    realisticLimits:
+      typeof raw.realisticLimits === 'boolean' ? raw.realisticLimits : defaults.realisticLimits,
+    antiDuplicate:
+      typeof raw.antiDuplicate === 'boolean' ? raw.antiDuplicate : defaults.antiDuplicate,
     equipRelevanceOverride:
       typeof raw.equipRelevanceOverride === 'boolean' ? raw.equipRelevanceOverride : null,
     heroRelevanceOverride:
@@ -208,27 +215,28 @@ function sanitizeFilters(raw: unknown): FilterState {
   };
 }
 
-export function loadPersistedState(
-  storage?: Pick<Storage, 'getItem'>,
-): PersistedState {
+export function loadPersistedState(storage?: Pick<Storage, 'getItem'>): PersistedState {
   const fallback = createDefaultPersistedState();
-  const targetStorage = storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
+  const targetStorage =
+    storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
   if (!targetStorage) return fallback;
 
   try {
-    const rawText = targetStorage.getItem(STORAGE_KEY);
+    const rawText = targetStorage.getItem(STORAGE_KEY) ?? targetStorage.getItem(LEGACY_STORAGE_KEY);
     if (!rawText) return fallback;
     const parsed: unknown = JSON.parse(rawText);
     if (!isObject(parsed) || parsed.version !== 1) return fallback;
 
-    const rawTh = typeof parsed.townHall === 'number' && Number.isFinite(parsed.townHall)
-      ? Math.floor(parsed.townHall)
-      : MAX_TOWN_HALL;
+    const rawTh =
+      typeof parsed.townHall === 'number' && Number.isFinite(parsed.townHall)
+        ? Math.floor(parsed.townHall)
+        : MAX_TOWN_HALL;
     const townHall = Math.max(MIN_TOWN_HALL, Math.min(MAX_TOWN_HALL, rawTh));
     const filters = sanitizeFilters(parsed.filters);
     const available = getAvailableCategories(townHall, filters.includeCcSiege);
     const activeCategory: CategoryId =
-      typeof parsed.activeCategory === 'string' && available.includes(parsed.activeCategory as CategoryId)
+      typeof parsed.activeCategory === 'string' &&
+      available.includes(parsed.activeCategory as CategoryId)
         ? (parsed.activeCategory as CategoryId)
         : 'troops';
 
@@ -240,12 +248,16 @@ export function loadPersistedState(
       filters.realisticLimits,
     );
 
-    const rawVol = typeof parsed.soundVolume === 'number' && Number.isFinite(parsed.soundVolume)
-      ? parsed.soundVolume
-      : 0.5;
+    const rawVol =
+      typeof parsed.soundVolume === 'number' && Number.isFinite(parsed.soundVolume)
+        ? parsed.soundVolume
+        : 0.5;
+
+    const locale: Locale = parsed.locale === 'en' ? 'en' : 'id';
 
     return {
       version: 1,
+      locale,
       townHall,
       activeCategory,
       filters,
@@ -263,7 +275,8 @@ export function savePersistedState(
   state: PersistedState,
   storage?: Pick<Storage, 'setItem'>,
 ): void {
-  const targetStorage = storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
+  const targetStorage =
+    storage ?? (typeof window !== 'undefined' ? window.localStorage : undefined);
   if (!targetStorage) return;
   try {
     targetStorage.setItem(STORAGE_KEY, JSON.stringify(state));

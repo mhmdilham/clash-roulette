@@ -1,8 +1,4 @@
-import {
-  getItemsByCategory,
-  getTownHallConfig,
-  isItemUnlockedAtTh,
-} from '../data';
+import { getItemsByCategory, getTownHallConfig, isItemUnlockedAtTh } from '../data';
 import type {
   CategoryId,
   EquipmentItem,
@@ -27,7 +23,7 @@ export function getPrimaryDisplayRole(
   return roles[0] ?? 'Main';
 }
 
-export type EmptyPoolReason =
+type EmptyPoolReason =
   | 'slot-full'
   | 'no-role-match'
   | 'all-heroes-equipped'
@@ -293,7 +289,11 @@ export function computeEligiblePool(input: PoolFilterInput): PoolFilterResult {
 
   if (category === 'heroes') {
     for (const hero of loadout.heroes) {
-      if (isReplacing && replaceTarget?.target.kind === 'hero' && hero.uid === replaceTarget.target.heroUid) {
+      if (
+        isReplacing &&
+        replaceTarget?.target.kind === 'hero' &&
+        hero.uid === replaceTarget.target.heroUid
+      ) {
         continue;
       }
       excludeIds.add(hero.heroId);
@@ -312,28 +312,44 @@ export function computeEligiblePool(input: PoolFilterInput): PoolFilterResult {
     }
   } else if (category === 'superTroops') {
     for (const entry of loadout.superTroops) {
-      if (isReplacing && replaceTarget?.target.kind === 'superTroop' && entry.uid === replaceTarget.target.uid) {
+      if (
+        isReplacing &&
+        replaceTarget?.target.kind === 'superTroop' &&
+        entry.uid === replaceTarget.target.uid
+      ) {
         continue;
       }
       excludeIds.add(entry.itemId);
     }
   } else if (category === 'siegeMachines') {
     for (const entry of loadout.siegeMachines) {
-      if (isReplacing && replaceTarget?.target.kind === 'siege' && entry.uid === replaceTarget.target.uid) {
+      if (
+        isReplacing &&
+        replaceTarget?.target.kind === 'siege' &&
+        entry.uid === replaceTarget.target.uid
+      ) {
         continue;
       }
       excludeIds.add(entry.itemId);
     }
   } else if (category === 'troops' && filters.antiDuplicate) {
     for (const entry of loadout.troops) {
-      if (isReplacing && replaceTarget?.target.kind === 'troop' && entry.uid === replaceTarget.target.uid) {
+      if (
+        isReplacing &&
+        replaceTarget?.target.kind === 'troop' &&
+        entry.uid === replaceTarget.target.uid
+      ) {
         continue;
       }
       excludeIds.add(entry.itemId);
     }
   } else if (category === 'spells' && filters.antiDuplicate) {
     for (const entry of loadout.spells) {
-      if (isReplacing && replaceTarget?.target.kind === 'spell' && entry.uid === replaceTarget.target.uid) {
+      if (
+        isReplacing &&
+        replaceTarget?.target.kind === 'spell' &&
+        entry.uid === replaceTarget.target.uid
+      ) {
         continue;
       }
       excludeIds.add(entry.itemId);

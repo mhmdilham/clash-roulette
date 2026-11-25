@@ -159,7 +159,9 @@ describe('computeEligiblePool — Bidirectional Hero <-> Equipment relevance', (
     expect(res.relevanceAutoActive).toBe(true);
     expect(res.relevanceEffective).toBe(true);
     expect(res.items.length).toBeGreaterThanOrEqual(3);
-    expect(res.items.every((i) => i.category === 'equipment' && i.heroId === 'dragon-duke')).toBe(true);
+    expect(res.items.every((i) => i.category === 'equipment' && i.heroId === 'dragon-duke')).toBe(
+      true,
+    );
   });
 
   it('reports all-heroes-equipped when every chosen hero already has 2/2 equipment', () => {
@@ -317,7 +319,9 @@ describe('computeEligiblePool — Realistic TH limits & Replacement scoping', ()
       },
     });
     expect(res.emptyReason).toBeNull();
-    expect(res.items.every((i) => i.category === 'equipment' && i.heroId === 'barbarian-king')).toBe(true);
+    expect(
+      res.items.every((i) => i.category === 'equipment' && i.heroId === 'barbarian-king'),
+    ).toBe(true);
     expect(res.items.map((i) => i.id)).not.toContain('giant-gauntlet');
     expect(res.items.map((i) => i.id)).not.toContain('spiky-ball');
   });
@@ -358,12 +362,16 @@ describe('computeEligiblePool — Realistic TH limits & Replacement scoping', ()
 describe('getPrimaryDisplayRole', () => {
   it('returns the unit primary role (first role) when no filter roles are active', () => {
     expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], [])).toBe('Main');
-    expect(getPrimaryDisplayRole(['Damage Dealer', 'Funnel', 'Clean-up'], [])).toBe('Damage Dealer');
+    expect(getPrimaryDisplayRole(['Damage Dealer', 'Funnel', 'Clean-up'], [])).toBe(
+      'Damage Dealer',
+    );
   });
 
   it('prefers the closest matching active filter role when present', () => {
     expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], ['Tank'])).toBe('Tank');
-    expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], ['Support', 'Funnel'])).toBe('Support');
+    expect(getPrimaryDisplayRole(['Main', 'Tank', 'Support'], ['Support', 'Funnel'])).toBe(
+      'Support',
+    );
   });
 
   it('falls back to primary role if active filter does not match unit roles', () => {

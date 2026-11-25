@@ -1,12 +1,18 @@
 import { getHeroById, getItemById } from '../data';
 import type { LoadoutState } from '../data/types';
+import { TRANSLATIONS, type Locale } from '../utils/i18n';
 
 function nameOf(id: string): string {
   return getItemById(id)?.name ?? id;
 }
 
-export function formatLoadoutText(loadout: LoadoutState, townHall: number): string {
-  const lines: string[] = [`⚔️ CoC Attack Spin (TH${townHall})`];
+export function formatLoadoutText(
+  loadout: LoadoutState,
+  townHall: number,
+  locale: Locale = 'id',
+): string {
+  const t = TRANSLATIONS[locale];
+  const lines: string[] = [`⚔️ Clash Roulette — CoC Loadout Spinner (TH${townHall})`];
 
   if (loadout.heroes.length > 0) {
     lines.push('');
@@ -23,13 +29,15 @@ export function formatLoadoutText(loadout: LoadoutState, townHall: number): stri
   if (loadout.unpairedEquipment.length > 0) {
     lines.push('');
     lines.push(
-      `🛡️ Equipment (Belum terpasang): ${loadout.unpairedEquipment.map((e) => nameOf(e.itemId)).join(', ')}`,
+      `🛡️ ${t.exportUnpairedEquipment}: ${loadout.unpairedEquipment.map((e) => nameOf(e.itemId)).join(', ')}`,
     );
   }
 
   if (loadout.unpairedPets.length > 0) {
     lines.push('');
-    lines.push(`🐾 Pets (Cadangan): ${loadout.unpairedPets.map((p) => nameOf(p.itemId)).join(', ')}`);
+    lines.push(
+      `🐾 ${t.exportReservePets}: ${loadout.unpairedPets.map((p) => nameOf(p.itemId)).join(', ')}`,
+    );
   }
 
   if (loadout.troops.length > 0) {

@@ -28,5 +28,9 @@ describe('formatLoadoutText', () => {
     expect(text).toContain('Heroic Spell');
     expect(text).not.toContain('Siege');
     expect(text).not.toContain('Super Troops');
+
+    const textEn = formatLoadoutText(loadout, 19, 'en');
+    expect(textEn).toContain('Clash Roulette');
+    expect(textEn).toContain('TH19');
   });
 });

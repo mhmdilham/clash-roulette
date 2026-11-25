@@ -219,7 +219,9 @@ async function main() {
     pending.push({ ...item, dest });
   }
 
-  console.log(`Total CoC items: ${allItems.length} (${skipped} cached, ${pending.length} to fetch)`);
+  console.log(
+    `Total CoC items: ${allItems.length} (${skipped} cached, ${pending.length} to fetch)`,
+  );
   if (pending.length === 0) return;
 
   // Step 1: Prefer clean square Avatar / Info / Equipment File: icons first

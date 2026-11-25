@@ -4,7 +4,7 @@ export async function exportElementToPng(el: HTMLElement, filename: string): Pro
   const dataUrl = await toPng(el, {
     cacheBust: true,
     pixelRatio: 2,
-    backgroundColor: '#090a12',
+    backgroundColor: '#12110f',
   });
 
   const link = document.createElement('a');

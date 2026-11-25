@@ -1,11 +1,5 @@
 export type CategoryId =
-  | 'troops'
-  | 'superTroops'
-  | 'siegeMachines'
-  | 'spells'
-  | 'heroes'
-  | 'equipment'
-  | 'pets';
+  'troops' | 'superTroops' | 'siegeMachines' | 'spells' | 'heroes' | 'equipment' | 'pets';
 
 export type HeroId =
   | 'barbarian-king'
@@ -15,13 +9,7 @@ export type HeroId =
   | 'royal-champion'
   | 'dragon-duke';
 
-export type TroopRole =
-  | 'Main'
-  | 'Support'
-  | 'Tank'
-  | 'Damage Dealer'
-  | 'Funnel'
-  | 'Clean-up';
+export type TroopRole = 'Main' | 'Support' | 'Tank' | 'Damage Dealer' | 'Funnel' | 'Clean-up';
 
 export const ALL_TROOP_ROLES: readonly TroopRole[] = [
   'Main',
@@ -32,13 +20,13 @@ export const ALL_TROOP_ROLES: readonly TroopRole[] = [
   'Clean-up',
 ] as const;
 
-export type MovementType = 'ground' | 'air';
+type MovementType = 'ground' | 'air';
 export type MovementFilter = 'all' | MovementType;
-export type ResourceType = 'elixir' | 'dark';
-export type EquipmentRarity = 'common' | 'epic';
+type ResourceType = 'elixir' | 'dark';
+type EquipmentRarity = 'common' | 'epic';
 export type MatchMode = 'OR' | 'AND';
 
-export interface BaseSpinItem {
+interface BaseSpinItem {
   id: string;
   name: string;
   category: CategoryId;
@@ -87,13 +75,7 @@ export interface PetItem extends BaseSpinItem {
 }
 
 export type SpinItem =
-  | TroopItem
-  | SuperTroopItem
-  | SiegeMachineItem
-  | SpellItem
-  | HeroItem
-  | EquipmentItem
-  | PetItem;
+  TroopItem | SuperTroopItem | SiegeMachineItem | SpellItem | HeroItem | EquipmentItem | PetItem;
 
 export interface TownHallConfig {
   level: number;

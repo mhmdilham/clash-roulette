@@ -11,7 +11,7 @@ export function pickRandomIndex(length: number, rng?: () => number): number {
   return Math.floor(Math.random() * length);
 }
 
-export function normalizeDeg(deg: number): number {
+function normalizeDeg(deg: number): number {
   const m = deg % 360;
   return m < 0 ? m + 360 : m;
 }

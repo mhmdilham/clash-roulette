@@ -8,7 +8,7 @@ export interface UnitVisualTheme {
   badgeText: string;
 }
 
-export function getUnitInitials(name: string): string {
+function getUnitInitials(name: string): string {
   const cleaned = name.replace(/\./g, '').trim();
   const words = cleaned.split(/\s+/).filter(Boolean);
   if (words.length === 1) {

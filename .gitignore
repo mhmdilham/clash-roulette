@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .superpowers/
+.agents/
+.taste-skill/
 .vite/
 *.local
 .DS_Store

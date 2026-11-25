@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { RotateCcw, Volume2, VolumeX, Zap, ShieldCheck, CopyX } from 'lucide-svelte';
+  import {
+    Check,
+    ChevronDown,
+    CopyX,
+    RotateCcw,
+    ShieldCheck,
+    Volume2,
+    VolumeX,
+    Zap,
+  } from 'lucide-svelte';
   import { CATEGORIES, TOWN_HALLS } from '../data';
   import type { CategoryId } from '../data/types';
   import { getSlotUsage } from '../engine/poolFilter';
@@ -27,43 +36,50 @@
   }
 </script>
 
-<section
-  class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl backdrop-blur-sm sm:p-5"
->
-  <div class="mb-4 flex items-center justify-between gap-2">
-    <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Pengaturan</h2>
+<section class="panel-surface p-4 sm:p-5">
+  <div class="mb-4 flex items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
+    <h2 class="text-sm font-semibold text-[var(--ink)]">{spinStore.t.settingsTitle}</h2>
     <button
       type="button"
       disabled={spinStore.isSpinning}
       onclick={() => spinStore.resetCategory()}
-      class="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:border-amber-400/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+      class="btn-tactile inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-2.5 py-1 text-xs font-medium text-[var(--ink-secondary)] hover:border-[var(--accent-border)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-45"
     >
       <RotateCcw class="h-3.5 w-3.5" />
-      Reset
+      {spinStore.t.reset}
     </button>
   </div>
 
   <!-- Town Hall Selector -->
   <div class="mb-4">
-    <label for="th-select" class="mb-1.5 block text-xs font-semibold text-slate-300">
+    <label for="th-select" class="mb-1.5 block text-xs font-medium text-[var(--ink-secondary)]">
       Town Hall
     </label>
-    <select
-      id="th-select"
-      value={spinStore.townHall}
-      disabled={spinStore.isSpinning}
-      onchange={(e) => spinStore.setTownHall(Number((e.currentTarget as HTMLSelectElement).value))}
-      class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-sm font-semibold text-slate-100 shadow-inner transition-colors focus:border-amber-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      {#each thLevelsDesc as th (th.level)}
-        <option value={th.level}>Town Hall {th.level}</option>
-      {/each}
-    </select>
+    <div class="relative">
+      <select
+        id="th-select"
+        value={spinStore.townHall}
+        disabled={spinStore.isSpinning}
+        onchange={(e) =>
+          spinStore.setTownHall(Number((e.currentTarget as HTMLSelectElement).value))}
+        class="min-h-11 w-full cursor-pointer appearance-none rounded-lg border border-[var(--border-strong)] bg-[var(--surface-inset)] py-2.5 pr-10 pl-3.5 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--accent-border)] focus:border-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        {#each thLevelsDesc as th (th.level)}
+          <option value={th.level}>Town Hall {th.level}</option>
+        {/each}
+      </select>
+      <ChevronDown
+        class="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-[var(--muted)]"
+        aria-hidden="true"
+      />
+    </div>
   </div>
 
   <!-- Category Selector Grid -->
   <div class="mb-4">
-    <span class="mb-1.5 block text-xs font-semibold text-slate-300">Kategori</span>
+    <span class="mb-1.5 block text-xs font-medium text-[var(--ink-secondary)]">
+      {spinStore.t.categoryLabel}
+    </span>
     <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
       {#each CATEGORIES as cat (cat.id)}
         {@const available = spinStore.availableCategories.includes(cat.id)}
@@ -76,18 +92,18 @@
             disabled={spinStore.isSpinning}
             onclick={() => spinStore.setCategory(cat.id)}
             aria-pressed={active}
-            class="flex items-center justify-between gap-1.5 rounded-xl border px-3 py-2 text-left text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 {active
-              ? 'border-amber-400 bg-gradient-to-r from-amber-500/20 to-purple-500/20 text-amber-200 shadow-[0_0_12px_rgba(251,191,36,0.18)]'
-              : 'border-slate-800 bg-slate-950/70 text-slate-300 hover:border-slate-600 hover:text-white'}"
+            class="btn-tactile flex min-h-10 cursor-pointer items-center justify-between gap-1.5 rounded-lg border px-3 py-2 text-left text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-45 {active
+              ? 'border-[var(--accent)] bg-[var(--accent-tint)] text-[var(--ink)]'
+              : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--ink-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-raised)] hover:text-[var(--ink)]'}"
           >
             <span class="truncate">{cat.label}</span>
             {#if badge}
               <span
-                class="shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold {full
-                  ? 'bg-emerald-500/20 text-emerald-300'
+                class="shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums {full
+                  ? 'bg-[var(--positive-tint)] text-[var(--positive)]'
                   : active
-                    ? 'bg-amber-400/25 text-amber-200'
-                    : 'bg-slate-800 text-slate-400'}"
+                    ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+                    : 'bg-[var(--surface-raised)] text-[var(--muted)]'}"
               >
                 {badge}
               </span>
@@ -99,18 +115,21 @@
   </div>
 
   <!-- Quick Behavior Toggles -->
-  <div class="space-y-2.5 border-t border-slate-800 pt-3.5">
+  <div class="space-y-3 border-t border-[var(--border)] pt-3.5">
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
       <button
         type="button"
         onclick={() => spinStore.setFastSpin(!spinStore.fastSpin)}
         aria-pressed={spinStore.fastSpin}
-        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors {spinStore.fastSpin
-          ? 'border-purple-400/60 bg-purple-500/20 text-purple-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
+        class="btn-tactile flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium {spinStore.fastSpin
+          ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+          : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink-secondary)]'}"
       >
-        <Zap class="h-3.5 w-3.5 shrink-0" />
+        <Zap class="h-3.5 w-3.5 shrink-0 {spinStore.fastSpin ? 'text-[var(--accent)]' : ''}" />
         <span class="truncate">Fast Spin</span>
+        {#if spinStore.fastSpin}
+          <Check class="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
+        {/if}
       </button>
 
       <button
@@ -118,12 +137,20 @@
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.toggleRealisticLimits()}
         aria-pressed={spinStore.filters.realisticLimits}
-        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 {spinStore.filters.realisticLimits
-          ? 'border-amber-400/60 bg-amber-500/15 text-amber-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
+        class="btn-tactile flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-45 {spinStore
+          .filters.realisticLimits
+          ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+          : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink-secondary)]'}"
       >
-        <ShieldCheck class="h-3.5 w-3.5 shrink-0" />
-        <span class="truncate">Batas Realistis TH</span>
+        <ShieldCheck
+          class="h-3.5 w-3.5 shrink-0 {spinStore.filters.realisticLimits
+            ? 'text-[var(--accent)]'
+            : ''}"
+        />
+        <span class="truncate">{spinStore.t.thLimits}</span>
+        {#if spinStore.filters.realisticLimits}
+          <Check class="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
+        {/if}
       </button>
 
       <button
@@ -131,27 +158,39 @@
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.toggleAntiDuplicate()}
         aria-pressed={spinStore.filters.antiDuplicate}
-        class="flex w-full items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-semibold transition-colors disabled:opacity-50 {spinStore.filters.antiDuplicate
-          ? 'border-sky-400/60 bg-sky-500/15 text-sky-200'
-          : 'border-slate-700/80 bg-slate-950/60 text-slate-400 hover:border-slate-600 hover:text-slate-200'}"
+        class="btn-tactile flex min-h-10 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-45 {spinStore
+          .filters.antiDuplicate
+          ? 'border-[var(--accent-border)] bg-[var(--accent-tint)] text-[var(--ink)]'
+          : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink-secondary)]'}"
       >
-        <CopyX class="h-3.5 w-3.5 shrink-0" />
-        <span class="truncate">Anti-Duplikat</span>
+        <CopyX
+          class="h-3.5 w-3.5 shrink-0 {spinStore.filters.antiDuplicate
+            ? 'text-[var(--accent)]'
+            : ''}"
+        />
+        <span class="truncate">{spinStore.t.antiDuplicate}</span>
+        {#if spinStore.filters.antiDuplicate}
+          <Check class="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
+        {/if}
       </button>
     </div>
 
     <!-- Sound Control -->
-    <div class="flex items-center gap-2.5 rounded-xl bg-slate-950/60 px-3 py-2 ring-1 ring-slate-800/80">
+    <div
+      class="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-inset)] px-3 py-1.5"
+    >
       <button
         type="button"
         onclick={() => spinStore.setSoundEnabled(!spinStore.soundEnabled)}
-        aria-label={spinStore.soundEnabled ? 'Matikan suara' : 'Nyalakan suara'}
-        class="text-slate-300 transition-colors hover:text-amber-300"
+        aria-label={spinStore.soundEnabled
+          ? spinStore.t.muteSoundAria
+          : spinStore.t.unmuteSoundAria}
+        class="icon-action cursor-pointer text-[var(--ink-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--accent)]"
       >
         {#if spinStore.soundEnabled && spinStore.soundVolume > 0}
-          <Volume2 class="h-4 w-4 text-amber-300" />
+          <Volume2 class="h-4 w-4 text-[var(--accent)]" />
         {:else}
-          <VolumeX class="h-4 w-4 text-slate-500" />
+          <VolumeX class="h-4 w-4 text-[var(--muted)]" />
         {/if}
       </button>
       <input
@@ -165,10 +204,10 @@
           spinStore.setSoundVolume(v);
           if (v > 0 && !spinStore.soundEnabled) spinStore.setSoundEnabled(true);
         }}
-        aria-label="Volume suara spin"
-        class="h-1.5 flex-1 cursor-pointer accent-amber-400"
+        aria-label={spinStore.t.volumeAria}
+        class="volume-range flex-1"
       />
-      <span class="w-8 text-right text-[11px] font-medium text-slate-400">
+      <span class="w-10 text-right font-mono text-xs font-medium text-[var(--muted)] tabular-nums">
         {spinStore.soundEnabled ? Math.round(spinStore.soundVolume * 100) : 0}%
       </span>
     </div>

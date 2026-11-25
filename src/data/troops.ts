@@ -34,7 +34,11 @@ export const TROOPS: readonly TroopItem[] = [
   troop('pekka', 'P.E.K.K.A', 'elixir', 'ground', 8, ['Main', 'Tank', 'Damage Dealer', 'Funnel']),
   troop('baby-dragon', 'Baby Dragon', 'elixir', 'air', 9, ['Funnel', 'Clean-up', 'Support']),
   troop('miner', 'Miner', 'elixir', 'ground', 10, ['Main', 'Damage Dealer', 'Clean-up']),
-  troop('electro-dragon', 'Electro Dragon', 'elixir', 'air', 11, ['Main', 'Damage Dealer', 'Funnel']),
+  troop('electro-dragon', 'Electro Dragon', 'elixir', 'air', 11, [
+    'Main',
+    'Damage Dealer',
+    'Funnel',
+  ]),
   troop('yeti', 'Yeti', 'elixir', 'ground', 12, ['Main', 'Tank', 'Funnel']),
   troop('dragon-rider', 'Dragon Rider', 'elixir', 'air', 13, ['Main', 'Damage Dealer']),
   troop('electro-titan', 'Electro Titan', 'elixir', 'ground', 14, ['Main', 'Tank', 'Support']),

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Filter, Link2, RotateCcw, AlertTriangle, ArrowRight } from 'lucide-svelte';
+  import { AlertTriangle, ArrowRight, Check, Filter, Link2, RotateCcw } from 'lucide-svelte';
   import { ALL_TROOP_ROLES, getHeroById } from '../data';
   import type { MovementFilter } from '../data/types';
   import { spinStore } from '../stores/spinStore.svelte';
@@ -16,51 +16,56 @@
 
   let unpairedEquipHeroNames = $derived.by(() => {
     const chosen = new Set(spinStore.loadout.heroes.map((h) => h.heroId));
-    const names = new Set<string>();
+    const names: string[] = [];
     for (const eq of spinStore.loadout.unpairedEquipment) {
       if (!chosen.has(eq.heroId)) {
-        names.add(getHeroById(eq.heroId)?.name ?? eq.heroId);
+        const heroName = getHeroById(eq.heroId)?.name ?? eq.heroId;
+        if (!names.includes(heroName)) {
+          names.push(heroName);
+        }
       }
     }
-    return [...names];
+    return names;
   });
 
-  const movementOptions: { value: MovementFilter; label: string }[] = [
-    { value: 'all', label: 'Semua' },
+  let movementOptions = $derived<{ value: MovementFilter; label: string }[]>([
+    { value: 'all', label: spinStore.t.movementAll },
     { value: 'ground', label: 'Ground' },
     { value: 'air', label: 'Air' },
-  ];
+  ]);
 </script>
 
-<section
-  class="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-xl backdrop-blur-sm sm:p-5"
->
-  <div class="mb-3 flex items-center justify-between gap-2">
+<section class="panel-surface p-4 sm:p-5">
+  <div class="mb-3.5 flex items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
     <div class="flex items-center gap-2">
-      <Filter class="h-4 w-4 text-amber-300" />
-      <h2 class="text-sm font-bold tracking-wide text-amber-300 uppercase">Filter</h2>
+      <Filter class="h-4 w-4 text-[var(--accent)]" aria-hidden="true" />
+      <h2 class="text-sm font-semibold text-[var(--ink)]">{spinStore.t.filterTitle}</h2>
     </div>
     {#if (cat === 'troops' || cat === 'superTroops') && hasTroopFilters}
       <button
         type="button"
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.resetTroopFilters()}
-        class="inline-flex items-center gap-1 rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white disabled:opacity-50"
+        class="btn-tactile inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-2.5 py-1 text-xs font-medium text-[var(--ink-secondary)] hover:border-[var(--accent-border)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-45"
       >
         <RotateCcw class="h-3 w-3" />
-        Reset Filter
+        {spinStore.t.resetFilter}
       </button>
     {/if}
   </div>
 
   <!-- 1. Troops & Super Troops Role Filter -->
   {#if cat === 'troops' || cat === 'superTroops'}
-    <div class="space-y-3">
+    <div class="space-y-3.5">
       <div>
-        <div class="mb-1.5 flex items-center justify-between">
-          <span class="text-xs font-semibold text-slate-300">Role</span>
+        <div class="mb-2 flex items-center justify-between">
+          <span class="text-xs font-medium text-[var(--ink-secondary)]">
+            {spinStore.t.unitRoles}
+          </span>
           {#if spinStore.filters.roles.length > 0}
-            <span class="text-[11px] text-amber-300/90">{spinStore.filters.roles.length} aktif</span>
+            <span class="font-mono text-xs font-medium text-[var(--accent)] tabular-nums">
+              {spinStore.t.activeRolesCount(spinStore.filters.roles.length)}
+            </span>
           {/if}
         </div>
         <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -71,29 +76,37 @@
               disabled={spinStore.isSpinning}
               onclick={() => spinStore.toggleRole(role)}
               aria-pressed={active}
-              class="flex w-full items-center justify-center rounded-xl border px-2.5 py-2 text-xs font-semibold transition-all disabled:opacity-50 {active
-                ? 'border-amber-400 bg-amber-500/20 text-amber-200 shadow-sm'
-                : 'border-slate-700/80 bg-slate-950/70 text-slate-400 hover:border-slate-500 hover:text-slate-200'}"
+              class="btn-tactile flex min-h-9 w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-45 {active
+                ? 'border-[var(--accent)] bg-[var(--accent-tint)] text-[var(--ink)]'
+                : 'border-[var(--border)] bg-[var(--surface-inset)] text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink-secondary)]'}"
             >
+              {#if active}
+                <Check class="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" aria-hidden="true" />
+              {/if}
               <span class="truncate">{role}</span>
             </button>
           {/each}
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3"
+      >
         <!-- OR / AND Match Mode -->
-        <div class="flex items-center gap-1.5">
-          <span class="text-[11px] font-medium text-slate-400">Cocokkan:</span>
-          <div class="inline-flex rounded-lg border border-slate-700/80 bg-slate-950 p-0.5">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-medium text-[var(--muted)]">{spinStore.t.matchLabel}</span>
+          <div
+            class="inline-flex rounded-lg border border-[var(--border-strong)] bg-[var(--surface-inset)] p-0.5"
+          >
             <button
               type="button"
               disabled={spinStore.isSpinning}
               onclick={() => spinStore.setMatchMode('OR')}
               aria-pressed={spinStore.filters.matchMode === 'OR'}
-              class="rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors {spinStore.filters.matchMode === 'OR'
-                ? 'bg-purple-600 text-white'
-                : 'text-slate-400 hover:text-white'}"
+              class="min-h-7 cursor-pointer rounded-md px-2.5 py-1 font-mono text-xs font-semibold transition-colors disabled:opacity-45 {spinStore
+                .filters.matchMode === 'OR'
+                ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)]'}"
             >
               OR
             </button>
@@ -102,9 +115,10 @@
               disabled={spinStore.isSpinning}
               onclick={() => spinStore.setMatchMode('AND')}
               aria-pressed={spinStore.filters.matchMode === 'AND'}
-              class="rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors {spinStore.filters.matchMode === 'AND'
-                ? 'bg-purple-600 text-white'
-                : 'text-slate-400 hover:text-white'}"
+              class="min-h-7 cursor-pointer rounded-md px-2.5 py-1 font-mono text-xs font-semibold transition-colors disabled:opacity-45 {spinStore
+                .filters.matchMode === 'AND'
+                ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)]'}"
             >
               AND
             </button>
@@ -112,16 +126,19 @@
         </div>
 
         <!-- Movement Filter -->
-        <div class="inline-flex rounded-lg border border-slate-700/80 bg-slate-950 p-0.5">
+        <div
+          class="inline-flex rounded-lg border border-[var(--border-strong)] bg-[var(--surface-inset)] p-0.5"
+        >
           {#each movementOptions as opt (opt.value)}
             <button
               type="button"
               disabled={spinStore.isSpinning}
               onclick={() => spinStore.setMovement(opt.value)}
               aria-pressed={spinStore.filters.movement === opt.value}
-              class="rounded-md px-2 py-0.5 text-[11px] font-semibold transition-colors {spinStore.filters.movement === opt.value
-                ? 'bg-amber-500/25 text-amber-200'
-                : 'text-slate-400 hover:text-white'}"
+              class="min-h-7 cursor-pointer rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-45 {spinStore
+                .filters.movement === opt.value
+                ? 'bg-[var(--accent)] text-[var(--accent-ink)]'
+                : 'text-[var(--muted)] hover:text-[var(--ink)]'}"
             >
               {opt.label}
             </button>
@@ -130,123 +147,143 @@
       </div>
     </div>
 
-  <!-- 2. Bidirectional Hero <-> Equipment Relevance Filter -->
+    <!-- 2. Bidirectional Hero <-> Equipment Relevance Filter -->
   {:else if cat === 'heroes' || cat === 'equipment'}
-    <div class="space-y-2.5">
-      <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
-        <div class="space-y-1">
-          <div class="flex items-center gap-1.5 text-xs font-bold text-slate-100">
-            <Link2 class="h-3.5 w-3.5 text-purple-400" />
-            <span>Hanya Relevan</span>
-          </div>
-          <p class="text-[11px] leading-relaxed text-slate-400">
-            {#if cat === 'equipment'}
-              {#if chosenHeroNames.length > 0}
-                {#if pool.relevanceEffective}
-                  Khusus equipment milik: <strong class="text-slate-200">{chosenHeroNames.join(', ')}</strong>.
-                {:else}
-                  Menampilkan semua equipment.
-                {/if}
+    <div
+      class="flex items-start justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-inset)] p-3.5"
+    >
+      <div class="space-y-1">
+        <div class="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink)]">
+          <Link2 class="h-3.5 w-3.5 text-[var(--accent)]" aria-hidden="true" />
+          <span>{spinStore.t.relevantOnly}</span>
+        </div>
+        <p class="text-xs leading-relaxed text-[var(--muted)]">
+          {#if cat === 'equipment'}
+            {#if chosenHeroNames.length > 0}
+              {#if pool.relevanceEffective}
+                {spinStore.t.relevantEquipActivePrefix}
+                <strong class="font-semibold text-[var(--ink)]">
+                  {chosenHeroNames.join(', ')}
+                </strong>.
               {:else}
-                Aktif otomatis setelah memilih Hero.
+                {spinStore.t.relevantEquipAll}
               {/if}
             {:else}
-              {#if unpairedEquipHeroNames.length > 0}
-                {#if pool.relevanceEffective}
-                  Khusus Hero pemilik equipment cadangan: <strong class="text-slate-200">{unpairedEquipHeroNames.join(', ')}</strong>.
-                {:else}
-                  Menampilkan semua Hero.
-                {/if}
-              {:else}
-                Aktif otomatis jika ada equipment cadangan.
-              {/if}
+              {spinStore.t.relevantEquipAutoHint}
             {/if}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          aria-label="Toggle filter hanya relevan Hero dan Equipment"
-          aria-checked={pool.relevanceEffective}
-          disabled={spinStore.isSpinning || (cat === 'equipment' ? chosenHeroNames.length === 0 : unpairedEquipHeroNames.length === 0)}
-          onclick={() => spinStore.toggleRelevance(cat)}
-          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-slate-700 transition-colors disabled:cursor-not-allowed disabled:opacity-40 {pool.relevanceEffective
-            ? 'bg-purple-600'
-            : 'bg-slate-800'}"
-        >
-          <span
-            class="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform {pool.relevanceEffective
-              ? 'translate-x-5'
-              : 'translate-x-1'}"
-          ></span>
-        </button>
+          {:else}
+            {#if unpairedEquipHeroNames.length > 0}
+              {#if pool.relevanceEffective}
+                {spinStore.t.relevantHeroActivePrefix}
+                <strong class="font-semibold text-[var(--ink)]">
+                  {unpairedEquipHeroNames.join(', ')}
+                </strong>.
+              {:else}
+                {spinStore.t.relevantHeroAll}
+              {/if}
+            {:else}
+              {spinStore.t.relevantHeroAutoHint}
+            {/if}
+          {/if}
+        </p>
       </div>
+
+      <button
+        type="button"
+        role="switch"
+        aria-label={spinStore.t.toggleRelevanceAria}
+        aria-checked={pool.relevanceEffective}
+        disabled={spinStore.isSpinning ||
+          (cat === 'equipment'
+            ? chosenHeroNames.length === 0
+            : unpairedEquipHeroNames.length === 0)}
+        onclick={() => spinStore.toggleRelevance(cat)}
+        class="relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-40 {pool.relevanceEffective
+          ? 'border-[var(--accent)] bg-[var(--accent)]'
+          : 'border-[var(--border-strong)] bg-[var(--surface-raised)]'}"
+      >
+        <span
+          data-checked={pool.relevanceEffective}
+          class="switch-knob inline-block h-4 w-4 rounded-full {pool.relevanceEffective
+            ? 'bg-[var(--accent-ink)]'
+            : 'bg-[var(--ink-secondary)]'}"
+        ></span>
+      </button>
     </div>
 
-  <!-- 3. Siege Machines CC Donation Toggle -->
+    <!-- 3. Siege Machines CC Donation Toggle -->
   {:else if cat === 'siegeMachines'}
-    <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+    <div
+      class="flex items-start justify-between gap-4 rounded-lg border border-[var(--border)] bg-[var(--surface-inset)] p-3.5"
+    >
       <div class="space-y-1">
-        <div class="text-xs font-bold text-slate-100">Donasi Clan Castle</div>
-        <p class="text-[11px] leading-relaxed text-slate-400">
+        <div class="text-xs font-semibold text-[var(--ink)]">{spinStore.t.ccDonationTitle}</div>
+        <p class="text-xs leading-relaxed text-[var(--muted)]">
           {#if spinStore.filters.includeCcSiege}
-            Menampilkan semua Siege Machine dari donasi CC.
+            {spinStore.t.ccDonationOnDesc}
           {:else}
-            Hanya Siege Machine yang terbuka di Workshop.
+            {spinStore.t.ccDonationOffDesc}
           {/if}
         </p>
       </div>
       <button
         type="button"
         role="switch"
-        aria-label="Toggle Siege Machine donasi Clan Castle TH10+"
+        aria-label={spinStore.t.toggleCcSiegeAria}
         aria-checked={spinStore.filters.includeCcSiege}
         disabled={spinStore.isSpinning}
         onclick={() => spinStore.toggleIncludeCcSiege()}
-        class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border border-slate-700 transition-colors disabled:opacity-50 {spinStore.filters.includeCcSiege
-          ? 'bg-amber-500'
-          : 'bg-slate-800'}"
+        class="relative mt-0.5 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-45 {spinStore
+          .filters.includeCcSiege
+          ? 'border-[var(--accent)] bg-[var(--accent)]'
+          : 'border-[var(--border-strong)] bg-[var(--surface-raised)]'}"
       >
         <span
-          class="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform {spinStore.filters.includeCcSiege
-            ? 'translate-x-5'
-            : 'translate-x-1'}"
+          data-checked={spinStore.filters.includeCcSiege}
+          class="switch-knob inline-block h-4 w-4 rounded-full {spinStore.filters.includeCcSiege
+            ? 'bg-[var(--accent-ink)]'
+            : 'bg-[var(--ink-secondary)]'}"
         ></span>
       </button>
     </div>
 
-  <!-- 4. Spells & Pets Info -->
+    <!-- 4. Spells & Pets Info -->
   {:else}
-    <p class="text-xs text-slate-400">
+    <p class="text-xs leading-relaxed text-[var(--muted)]">
       {#if cat === 'pets'}
-        Pet otomatis dipasangkan ke Hero yang masih kosong.
+        {spinStore.t.petsInfo}
       {:else}
-        Semua Elixir & Dark Spell yang tersedia ditampilkan di roda.
+        {spinStore.t.spellsInfo}
       {/if}
     </p>
   {/if}
 
   <!-- Contextual Empty Pool Recovery Banner -->
   {#if pool.emptyReason}
-    <div class="mt-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
-      <div class="mb-2 flex items-start gap-2">
-        <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+    <div
+      class="mt-3.5 rounded-lg border border-l-4 border-[var(--accent-border)] border-l-[var(--accent)] bg-[var(--accent-tint)] p-3.5 text-xs text-[var(--ink)]"
+    >
+      <div class="mb-2.5 flex items-start gap-2">
+        <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent)]" aria-hidden="true" />
         <div>
           {#if pool.emptyReason === 'no-role-match'}
-            <p class="font-semibold">Tidak ada unit yang cocok dengan kombinasi filter saat ini.</p>
+            <p class="font-semibold">{spinStore.t.emptyNoRoleMatch}</p>
           {:else if pool.emptyReason === 'all-heroes-equipped'}
-            <p class="font-semibold">Semua Hero terpilih sudah memiliki 2/2 Equipment.</p>
+            <p class="font-semibold">{spinStore.t.emptyAllHeroesEquipped}</p>
           {:else if pool.emptyReason === 'no-relevant-heroes'}
-            <p class="font-semibold">Semua Hero yang cocok dengan Equipment sudah terpilih.</p>
+            <p class="font-semibold">{spinStore.t.emptyNoRelevantHeroes}</p>
           {:else if pool.emptyReason === 'slot-full'}
             <p class="font-semibold">
-              Batas slot kategori ini sudah penuh ({pool.slotUsage.used}/{pool.slotUsage.max} di TH{spinStore.townHall}).
+              {spinStore.t.emptySlotFull(
+                pool.slotUsage.used,
+                pool.slotUsage.max,
+                spinStore.townHall,
+              )}
             </p>
           {:else if pool.emptyReason === 'all-picked'}
-            <p class="font-semibold">Semua unit di pool ini sudah masuk loadout.</p>
+            <p class="font-semibold">{spinStore.t.emptyAllPicked}</p>
           {:else}
-            <p class="font-semibold">Kategori belum terbuka untuk pengaturan TH saat ini.</p>
+            <p class="font-semibold">{spinStore.t.emptyUnavailable}</p>
           {/if}
         </div>
       </div>
@@ -256,51 +293,51 @@
           <button
             type="button"
             onclick={() => spinStore.resetTroopFilters()}
-            class="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-bold text-slate-950 transition-colors hover:bg-amber-400"
+            class="btn-tactile min-h-8 cursor-pointer rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-hover)]"
           >
-            Reset Filter Role
+            {spinStore.t.actionResetRoleFilter}
           </button>
         {:else if pool.emptyReason === 'all-heroes-equipped'}
           {#if spinStore.availableCategories.includes('heroes')}
             <button
               type="button"
               onclick={() => spinStore.setCategory('heroes')}
-              class="inline-flex items-center gap-1 rounded-lg bg-purple-600 px-2.5 py-1 text-xs font-bold text-white transition-colors hover:bg-purple-500"
+              class="btn-tactile inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-hover)]"
             >
-              Lanjut Spin Hero
+              {spinStore.t.actionContinueSpinHero}
               <ArrowRight class="h-3.5 w-3.5" />
             </button>
           {/if}
           <button
             type="button"
             onclick={() => spinStore.toggleRelevance('equipment', false)}
-            class="rounded-lg border border-amber-400/50 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-amber-200 hover:bg-slate-800"
+            class="btn-tactile min-h-8 cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:border-[var(--accent-border)]"
           >
-            Matikan Filter Relevan
+            {spinStore.t.actionDisableRelevance}
           </button>
         {:else if pool.emptyReason === 'no-relevant-heroes'}
           <button
             type="button"
             onclick={() => spinStore.toggleRelevance('heroes', false)}
-            class="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-bold text-slate-950 hover:bg-amber-400"
+            class="btn-tactile min-h-8 cursor-pointer rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-ink)] hover:bg-[var(--accent-hover)]"
           >
-            Matikan Filter Relevan & Lanjut Isi Sisa Hero
+            {spinStore.t.actionDisableRelevanceFillHeroes}
           </button>
         {:else if pool.emptyReason === 'slot-full'}
           <button
             type="button"
             onclick={() => spinStore.toggleRealisticLimits()}
-            class="rounded-lg border border-amber-400/50 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-amber-200 hover:bg-slate-800"
+            class="btn-tactile min-h-8 cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:border-[var(--accent-border)]"
           >
-            Matikan Batas Realistis TH
+            {spinStore.t.actionDisableThLimits}
           </button>
         {:else if pool.emptyReason === 'all-picked' && (cat === 'troops' || cat === 'spells')}
           <button
             type="button"
             onclick={() => spinStore.toggleAntiDuplicate()}
-            class="rounded-lg border border-amber-400/50 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-amber-200 hover:bg-slate-800"
+            class="btn-tactile min-h-8 cursor-pointer rounded-lg border border-[var(--border-strong)] bg-[var(--surface-raised)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] hover:border-[var(--accent-border)]"
           >
-            Matikan Anti-Duplikat
+            {spinStore.t.actionDisableAntiDuplicate}
           </button>
         {/if}
       </div>

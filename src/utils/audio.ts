@@ -1,4 +1,4 @@
-export class SpinAudio {
+class SpinAudio {
   private ctx: AudioContext | null = null;
   private enabled = true;
   private volume = 0.5;
