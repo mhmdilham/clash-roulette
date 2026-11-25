@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Check, Copy, Download, Eraser, Lock, RotateCw, Trash2, Unlock, X } from 'lucide-svelte';
+  import { Check, Copy, Download, Eraser, Lock, RotateCw, Trash2, Unlock, X } from '@lucide/svelte';
   import { getHeroById, getItemById, getTownHallConfig } from '../data';
   import type { SlotTarget, SuperTroopItem, TroopItem, TroopRole } from '../data/types';
   import { formatLoadoutText } from '../engine/exportFormatter';

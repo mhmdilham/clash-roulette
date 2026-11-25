@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Swords, X } from 'lucide-svelte';
+  import { Swords, X } from '@lucide/svelte';
   import SpinWheel from './components/SpinWheel.svelte';
   import SettingsPanel from './components/SettingsPanel.svelte';
   import FilterPanel from './components/FilterPanel.svelte';

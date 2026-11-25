@@ -1,5 +1,7 @@
 dist/
 node_modules/
+.vite/
+.wrangler/
 package-lock.json
 .agents/
 .taste-skill/

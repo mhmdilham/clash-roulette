@@ -8,7 +8,15 @@ import prettier from 'eslint-config-prettier';
 
 export default defineConfig(
   {
-    ignores: ['dist/**', 'node_modules/**', '.agents/**', '.taste-skill/**', '.superpowers/**'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.vite/**',
+      '.wrangler/**',
+      '.agents/**',
+      '.taste-skill/**',
+      '.superpowers/**',
+    ],
   },
   js.configs.recommended,
   ...ts.configs.recommended,

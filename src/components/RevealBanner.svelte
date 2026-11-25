@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CheckCircle2, RotateCw, X } from 'lucide-svelte';
+  import { CheckCircle2, RotateCw, X } from '@lucide/svelte';
   import { getHeroById } from '../data';
   import { spinStore } from '../stores/spinStore.svelte';
   import UnitIcon from './UnitIcon.svelte';

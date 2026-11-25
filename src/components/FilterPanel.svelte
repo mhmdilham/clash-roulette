@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { AlertTriangle, ArrowRight, Check, Filter, Link2, RotateCcw } from 'lucide-svelte';
+  import { AlertTriangle, ArrowRight, Check, Filter, Link2, RotateCcw } from '@lucide/svelte';
   import { ALL_TROOP_ROLES, getHeroById } from '../data';
   import type { MovementFilter } from '../data/types';
   import { spinStore } from '../stores/spinStore.svelte';

@@ -8,7 +8,7 @@
     Volume2,
     VolumeX,
     Zap,
-  } from 'lucide-svelte';
+  } from '@lucide/svelte';
   import { CATEGORIES, TOWN_HALLS } from '../data';
   import type { CategoryId } from '../data/types';
   import { getSlotUsage } from '../engine/poolFilter';

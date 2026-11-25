@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
-  import { RotateCw, X } from 'lucide-svelte';
+  import { RotateCw, X } from '@lucide/svelte';
   import { CATEGORIES } from '../data';
   import { spinStore } from '../stores/spinStore.svelte';
   import {
